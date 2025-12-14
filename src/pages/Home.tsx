@@ -38,7 +38,7 @@ export default function Home() {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url(https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=1920&h=1080&fit=crop)`,
+            backgroundImage: `url(https://media.istockphoto.com/id/105680592/photo/indian-scarves-in-many-colors-for-display.jpg?s=612x612&w=0&k=20&c=eGIl-xZv6K7miZSCQjvezFqSoas3H6uVZ4OR7cAhDxs=)`,
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
@@ -153,7 +153,7 @@ export default function Home() {
               },
               {
                 title: 'Patola Silk',
-                image: 'https://images.unsplash.com/photo-1594463750939-ebb28c3f7f75?w=600&h=800&fit=crop',
+                image: 'https://images.unsplash.com/flagged/photo-1551854716-8b811be39e7e?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                 desc: 'Double ikat weaving',
               },
               {
@@ -163,7 +163,7 @@ export default function Home() {
               },
               {
                 title: 'Chanderi Silk',
-                image: 'https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=600&h=800&fit=crop',
+                image: 'https://images.unsplash.com/photo-1641877953739-8cab85119201?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                 desc: 'Lightweight & sheer',
               },
               {
