@@ -41,16 +41,16 @@ export default function Home() {
             backgroundImage: `url(https://media.istockphoto.com/id/105680592/photo/indian-scarves-in-many-colors-for-display.jpg?s=612x612&w=0&k=20&c=eGIl-xZv6K7miZSCQjvezFqSoas3H6uVZ4OR7cAhDxs=)`,
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/40 to-background" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/5 via-background/20 to-background" />
         
         <div className="relative z-10 container mx-auto px-4 text-center">
-          <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground mb-4 animate-slide-up">
+          <p className="text-sm uppercase tracking-[0.3em] text-black mb-4 animate-slide-up">
             {config.tagline}
           </p>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold mb-6 animate-slide-up stagger-1">
             {config.brandName}
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 animate-slide-up stagger-2">
+          <p className="text-lg md:text-xl text-black max-w-2xl mx-auto mb-8 animate-slide-up stagger-2">
             {config.description}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up stagger-3">
@@ -138,7 +138,7 @@ export default function Home() {
             {[
               {
                 title: 'Kanchipuram Silk',
-                image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600&h=800&fit=crop',
+                image: 'https://images.unsplash.com/photo-1727430228383-aa1fb59db8bf?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                 desc: 'Traditional temple border',
               },
               {
@@ -158,7 +158,7 @@ export default function Home() {
               },
               {
                 title: 'Tussar Silk',
-                image: 'https://images.unsplash.com/photo-1585487000160-6ebcfceb0d03?w=600&h=800&fit=crop',
+                image: 'https://images.unsplash.com/photo-1618901185975-d59f7091bcfe?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8c2lsayUyMHNhcmVlfGVufDB8fDB8fHww',
                 desc: 'Natural golden sheen',
               },
               {
@@ -173,7 +173,7 @@ export default function Home() {
               },
               {
                 title: 'Paithani Silk',
-                image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&h=800&fit=crop&hue=40',
+                image: 'https://images.unsplash.com/photo-1614881064213-180b1c28f743?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fHNpbGslMjBzYXJlZXxlbnwwfHwwfHx8MA%3D%3D',
                 desc: 'Peacock motifs',
               },
             ].map((saree, index) => (
