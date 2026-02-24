@@ -509,8 +509,25 @@ export default function AdminCustomProducts() {
                 <Input
                   id="base_price"
                   type="number"
-                  value={formData.base_price || 0}
-                  onChange={(e) => setFormData({ ...formData, base_price: parseFloat(e.target.value) || 0 })}
+                  value={formData.base_price ?? ''}
+                  onFocus={() => {
+                    if (formData.base_price === 0) {
+                      setFormData({ ...formData, base_price: undefined });
+                    }
+                  }}
+                  onChange={(e) => {
+                    if (e.target.value === '') {
+                      setFormData({ ...formData, base_price: undefined });
+                      return;
+                    }
+                    const nextValue = parseFloat(e.target.value);
+                    setFormData({ ...formData, base_price: Number.isNaN(nextValue) ? undefined : nextValue });
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      setFormData({ ...formData, base_price: 0 });
+                    }
+                  }}
                   placeholder="0"
                   step="0.01"
                 />

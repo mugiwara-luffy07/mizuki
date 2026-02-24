@@ -18,6 +18,7 @@ export function Navbar() {
   const cartItemCount = getItemCount();
   const wishlistCount = wishlistItems.length;
   const isAdmin = role === 'admin' || role === 'superadmin';
+  const isAdminLoggedIn = Boolean(user && isAdmin);
 
   const handleLogout = async () => {
     try {
@@ -63,7 +64,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-4 lg:gap-6 xl:gap-8">
             <Link
               to={`/${tenant}`}
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
@@ -98,11 +99,11 @@ export function Navbar() {
           
 
           {/* Right Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 lg:gap-3">
             {/* Cart Icon */}
             <Link
               to={`/${tenant}/cart`}
-              className="relative p-2 hover:bg-muted rounded-full transition-colors"
+              className={`${isAdminLoggedIn ? 'hidden' : 'relative p-2 hover:bg-muted rounded-full transition-colors'}`}
             >
               <ShoppingBag className="w-5 h-5" />
               {cartItemCount > 0 && (
@@ -115,7 +116,7 @@ export function Navbar() {
             {/* Wishlist Icon */}
             <Link
               to={`/${tenant}/wishlist`}
-              className="relative p-2 hover:bg-muted rounded-full transition-colors hidden md:flex"
+              className={`${isAdminLoggedIn ? 'hidden' : 'hidden md:flex'} relative p-2 hover:bg-muted rounded-full transition-colors`}
             >
               <Heart className="w-5 h-5" />
               {wishlistCount > 0 && (
@@ -127,19 +128,22 @@ export function Navbar() {
 
             {user ? (
               <>
-                <Link
-                  to={`/${tenant}/my-orders`}
-                  className="hidden md:flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  My Orders
-                </Link>
+                {!isAdmin && (
+                  <Link
+                    to={`/${tenant}/my-orders`}
+                    className="hidden md:flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    My Orders
+                  </Link>
+                )}
                 {isAdmin && (
                   <Link
                     to={`/${tenant}/admin/dashboard`}
                     className="hidden md:flex items-center gap-2 px-3 py-2 text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 rounded-md transition-colors"
                   >
                     <LayoutDashboard className="w-4 h-4" />
-                    Admin Dashboard
+                    <span className="hidden xl:inline">Admin Dashboard</span>
+                    <span className="xl:hidden">Admin</span>
                   </Link>
                 )}
                 <button
@@ -166,15 +170,17 @@ export function Navbar() {
                 </Link>
               </>
             )}
-            <Link 
-              to={`/${tenant}/admin`}
-              className="p-2 hover:bg-muted rounded-full transition-colors hidden md:flex"
-            >
-              <User className="w-5 h-5" />
-            </Link>
+            {!isAdminLoggedIn && (
+              <Link 
+                to={`/${tenant}/admin`}
+                className="p-2 hover:bg-muted rounded-full transition-colors hidden md:flex"
+              >
+                <User className="w-5 h-5" />
+              </Link>
+            )}
             <Link
               to={`/${tenant}/custom-order`}
-              className="hidden md:flex items-center gap-2 btn-tenant text-sm"
+              className={`${isAdminLoggedIn ? 'hidden' : 'hidden md:flex'} items-center gap-2 btn-tenant text-sm`}
             >
               <Scissors className="w-4 h-4" />
               Start Order
@@ -183,7 +189,7 @@ export function Navbar() {
               href="https://wa.me/919942322743"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden md:flex items-center gap-2 btn-tenant text-sm bg-emerald-500 text-white"
+              className={`${isAdminLoggedIn ? 'hidden' : 'hidden md:flex'} items-center gap-2 btn-tenant text-sm bg-emerald-500 text-white`}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.52 3.48C18.25 1.23 15.16 0 11.99 0 5.43 0 .16 5.25.16 11.81c0 2.16.56 4.27 1.64 6.16L0 24l6.39-1.67c1.8.98 3.83 1.5 5.92 1.5 6.56 0 11.83-5.25 11.83-11.81 0-3.16-1.23-6.13-3.47-8.36zM11.99 21.81c-1.85 0-3.65-.5-5.23-1.45l-.375-.22-3.88 1.01 1.03-3.76-.24-.38C2.77 15.88 2.16 14 2.16 11.99 2.16 6.32 6.7 1.87 12.35 1.87c2.83 0 5.49 1.1 7.5 3.1 2 2 3.1 4.67 3.1 7.5 0 5.65-4.45 10.24-10.1 10.24zm5.52-7.68c-.3-.15-1.8-.9-2.08-1-.28-.1-.48-.15-.68.15-.2.3-.78.98-.96 1.18-.18.2-.36.22-.66.07-.3-.15-1.27-.47-2.42-1.5-.9-.8-1.5-1.78-1.68-2.08-.18-.3-.02-.46.13-.61.13-.13.3-.34.45-.51.15-.17.2-.3.3-.5.1-.2.05-.38-.025-.53-.075-.15-.68-1.63-.93-2.23-.24-.58-.49-.5-.68-.51-.18-.01-.38-.01-.58-.01-.2 0-.52.075-.8.375-.28.3-1.06 1.03-1.06 2.51 0 1.48 1.09 2.91 1.24 3.11.15.2 2.13 3.25 5.16 4.56.72.3 1.28.48 1.72.63.73.23 1.4.2 1.91.12.58-.08 1.79-.73 2.04-1.43.25-.7.25-1.31.175-1.43-.075-.12-.275-.2-.575-.35z"/></svg>
               WhatsApp
@@ -250,13 +256,15 @@ export function Navbar() {
               </Link>
               {user ? (
                 <>
-                  <Link
-                    to={`/${tenant}/my-orders`}
-                    className="text-sm font-medium py-2 flex items-center gap-2"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    My Orders
-                  </Link>
+                  {!isAdmin && (
+                    <Link
+                      to={`/${tenant}/my-orders`}
+                      className="text-sm font-medium py-2 flex items-center gap-2"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      My Orders
+                    </Link>
+                  )}
                   {isAdmin && (
                     <Link
                       to={`/${tenant}/admin/dashboard`}

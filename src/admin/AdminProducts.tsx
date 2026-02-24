@@ -555,8 +555,25 @@ export default function AdminProducts() {
                 <Input
                   id="price"
                   type="number"
-                  value={formData.price || 0}
-                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                  value={formData.price ?? ''}
+                  onFocus={() => {
+                    if (formData.price === 0) {
+                      setFormData({ ...formData, price: undefined });
+                    }
+                  }}
+                  onChange={(e) => {
+                    if (e.target.value === '') {
+                      setFormData({ ...formData, price: undefined });
+                      return;
+                    }
+                    const nextValue = parseFloat(e.target.value);
+                    setFormData({ ...formData, price: Number.isNaN(nextValue) ? undefined : nextValue });
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      setFormData({ ...formData, price: 0 });
+                    }
+                  }}
                   placeholder="0"
                 />
               </div>
@@ -568,8 +585,25 @@ export default function AdminProducts() {
                 <Input
                   id="stock_quantity"
                   type="number"
-                  value={formData.stock_quantity || 0}
-                  onChange={(e) => setFormData({ ...formData, stock_quantity: parseInt(e.target.value) || 0 })}
+                  value={formData.stock_quantity ?? ''}
+                  onFocus={() => {
+                    if (formData.stock_quantity === 0) {
+                      setFormData({ ...formData, stock_quantity: undefined });
+                    }
+                  }}
+                  onChange={(e) => {
+                    if (e.target.value === '') {
+                      setFormData({ ...formData, stock_quantity: undefined });
+                      return;
+                    }
+                    const nextValue = parseInt(e.target.value, 10);
+                    setFormData({ ...formData, stock_quantity: Number.isNaN(nextValue) ? undefined : nextValue });
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      setFormData({ ...formData, stock_quantity: 0 });
+                    }
+                  }}
                   placeholder="0"
                 />
               </div>
@@ -578,8 +612,25 @@ export default function AdminProducts() {
                 <Input
                   id="shipping_cost"
                   type="number"
-                  value={formData.shipping_cost || 0}
-                  onChange={(e) => setFormData({ ...formData, shipping_cost: parseFloat(e.target.value) || 0 })}
+                  value={formData.shipping_cost ?? ''}
+                  onFocus={() => {
+                    if (formData.shipping_cost === 0) {
+                      setFormData({ ...formData, shipping_cost: undefined });
+                    }
+                  }}
+                  onChange={(e) => {
+                    if (e.target.value === '') {
+                      setFormData({ ...formData, shipping_cost: undefined });
+                      return;
+                    }
+                    const nextValue = parseFloat(e.target.value);
+                    setFormData({ ...formData, shipping_cost: Number.isNaN(nextValue) ? undefined : nextValue });
+                  }}
+                  onBlur={(e) => {
+                    if (e.target.value === '') {
+                      setFormData({ ...formData, shipping_cost: 0 });
+                    }
+                  }}
                   placeholder="0"
                   step="0.01"
                 />
