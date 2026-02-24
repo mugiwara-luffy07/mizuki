@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { Building2, Plus, LogOut, Menu, X, Shield, LayoutDashboard } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
+import { clearSuperadminAuth } from './ProtectedRouteSuperadmin';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: 'dashboard' },
@@ -12,11 +12,10 @@ const navItems = [
 export default function SuperAdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
-    logout();
+    clearSuperadminAuth();
     navigate('/superadmin/login');
   };
 
@@ -106,11 +105,11 @@ export default function SuperAdminLayout() {
             <div className="lg:hidden" />
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="text-sm font-medium">{user?.email}</p>
-                <p className="text-xs text-muted-foreground">Super Admin</p>
+                <p className="text-sm font-medium">Super Admin</p>
+                <p className="text-xs text-muted-foreground">Administrator</p>
               </div>
               <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold">
-                {user?.email?.charAt(0).toUpperCase()}
+                A
               </div>
             </div>
           </div>

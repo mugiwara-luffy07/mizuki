@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Check, ChevronLeft, ChevronRight, Loader2, CheckCircle, Mail } from 'lucide-react';
 import { useTenantStore } from '@/store/tenantStore';
 import { useOrderStore, OrderData } from '@/store/orderStore';
+import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
-import { tenantApi } from '@/api/axiosInstance';
+import { createOrder } from '@/lib/supabase/orders';
 import { sendConfirmationEmail } from '@/lib/api/email';
 
 // Step components
@@ -26,6 +27,7 @@ export default function CustomOrder() {
   const { tenant } = useParams<{ tenant: string }>();
   const navigate = useNavigate();
   const { config } = useTenantStore();
+  const { user, username } = useAuthStore();
   const { currentOrder, currentStep, setStep, nextStep, prevStep, resetOrder } = useOrderStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'sending-email' | 'success'>('idle');
@@ -35,6 +37,17 @@ export default function CustomOrder() {
     phone: '',
     address: '',
   });
+
+  // Pre-fill customer info from authenticated user
+  useEffect(() => {
+    if (user) {
+      setCustomerInfo(prev => ({
+        ...prev,
+        email: user.email || prev.email,
+        name: username || prev.name,
+      }));
+    }
+  }, [user, username]);
 
   if (!config || !tenant) return null;
 
@@ -66,20 +79,22 @@ export default function CustomOrder() {
     setSubmitState('submitting');
     
     try {
-      // Create the order
-      const response = await tenantApi.createOrder(tenant, {
+      // Create the order using Supabase (link to authenticated user)
+      const order = await createOrder({
+        tenant: tenant!,
         customer: customerInfo,
         orderData: currentOrder as OrderData,
+        userId: user?.id, // Link order to authenticated user
       });
       
-      const orderId = response.data?.id || `ORD-${Date.now()}`;
+      const orderId = order.id;
       
       // Send confirmation email
       setSubmitState('sending-email');
       try {
-        await sendConfirmationEmail(tenant, {
+        await sendConfirmationEmail(tenant!, {
           orderId,
-          customerEmail: customerInfo.email,
+          customerEmail: user?.email || customerInfo.email,
           adminEmail: `admin@${tenant}.com`, // Default admin email
           orderDetails: {
             fabric: currentOrder.fabric!,
@@ -87,15 +102,19 @@ export default function CustomOrder() {
             design: currentOrder.design!,
             measurements: currentOrder.measurements!,
             unit: currentOrder.unit || 'inches',
-            customerInfo,
+            customerInfo: {
+              ...customerInfo,
+              email: user?.email || customerInfo.email,
+            },
           },
         });
-        toast.success('Order placed! Confirmation email sent');
+        toast.success('✅ Order placed successfully!');
+        toast.info('📩 A confirmation email has been sent to your registered email address.');
       } catch (emailError) {
         // Order was placed, but email failed - still show success
         console.error('Failed to send confirmation email:', emailError);
-        toast.success('Order placed successfully!');
-        toast.error('Could not send confirmation email');
+        toast.success('✅ Order placed successfully!');
+        toast.error('Failed to send email. Please try again later.');
       }
       
       setSubmitState('success');
@@ -106,8 +125,9 @@ export default function CustomOrder() {
         navigate(`/${tenant}/order-success`);
       }, 1500);
       
-    } catch (error) {
-      toast.error('Failed to submit order. Please try again.');
+    } catch (error: any) {
+      console.error('Error creating order:', error);
+      toast.error(error?.message || 'Failed to submit order. Please try again.');
       setSubmitState('idle');
     } finally {
       setIsSubmitting(false);

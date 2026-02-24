@@ -1,12 +1,28 @@
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore';
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+
+const SUPERADMIN_AUTH_KEY = "superadmin-authed";
+
+export function setSuperadminAuth(isAuthed: boolean): void {
+  if (isAuthed) {
+    localStorage.setItem(SUPERADMIN_AUTH_KEY, "true");
+  } else {
+    localStorage.removeItem(SUPERADMIN_AUTH_KEY);
+  }
+}
+
+export function clearSuperadminAuth(): void {
+  localStorage.removeItem(SUPERADMIN_AUTH_KEY);
+}
+
+export function isSuperadminAuthed(): boolean {
+  return localStorage.getItem(SUPERADMIN_AUTH_KEY) === "true";
+}
 
 export function ProtectedRouteSuperadmin() {
-  const { isAuthenticated, user } = useAuthStore();
+  const location = useLocation();
 
-  // Check if superadmin is authenticated
-  if (!isAuthenticated || user?.role !== 'superadmin') {
-    return <Navigate to="/superadmin/login" replace />;
+  if (!isSuperadminAuthed()) {
+    return <Navigate to="/superadmin/login" replace state={{ from: location.pathname }} />;
   }
 
   return <Outlet />;

@@ -1,56 +1,27 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Shield } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
 import { toast } from 'sonner';
-import { authApi } from '@/api/axiosInstance';
+import { setSuperadminAuth } from './ProtectedRouteSuperadmin';
 
 export default function SuperAdminLogin() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, user } = useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect if already authenticated as superadmin
-  useEffect(() => {
-    if (isAuthenticated && user?.role === 'superadmin') {
-      navigate('/superadmin/dashboard');
-    }
-  }, [isAuthenticated, user, navigate]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    try {
-      // Call backend API
-      const response = await authApi.superAdminLogin(email, password);
-
-      const { token, user: userData } = response.data;
-      
-      login(
-        { id: userData.id, email: userData.email, role: 'superadmin' },
-        token
-      );
-      
+    // Simple mock login - accepts any email/password
+    setTimeout(() => {
+      setSuperadminAuth(true);
       toast.success('Welcome, Super Admin!');
       navigate('/superadmin/dashboard');
-    } catch (error: any) {
-      // Fallback mock login for demo purposes
-      if (email && password) {
-        login(
-          { id: 'super-1', email, role: 'superadmin' },
-          'mock-superadmin-token-' + Date.now()
-        );
-        toast.success('Welcome, Super Admin!');
-        navigate('/superadmin/dashboard');
-      } else {
-        toast.error('Invalid credentials');
-      }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    }, 500);
   };
 
   return (
@@ -92,6 +63,8 @@ export default function SuperAdminLogin() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  title={showPassword ? "Hide password" : "Show password"}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />

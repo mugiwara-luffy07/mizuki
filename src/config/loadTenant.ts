@@ -45,8 +45,11 @@ export interface TenantConfig {
   logo: string;
   banner: string;
   social: {
+    facebook?: string;
     instagram?: string;
     twitter?: string;
+    youtube?: string;
+    website?: string;
   };
   payment: PaymentConfig;
   fabricOptions: FabricOption[];

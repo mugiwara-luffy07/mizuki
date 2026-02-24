@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { Instagram, Twitter } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube } from 'lucide-react';
 import { useTenantStore } from '@/store/tenantStore';
 
 export function Footer() {
@@ -83,15 +83,54 @@ export function Footer() {
           <p className="text-sm opacity-60">
             © {new Date().getFullYear()} {config.brandName}. All rights reserved.
           </p>
+          <a
+            href="https://digitekera.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-sm opacity-70 hover:opacity-100 transition-opacity"
+          >
+            <img
+              src="/logos/digiteklogo.jpeg"
+              alt="Digitek Era"
+              className="h-4 w-4 object-contain"
+            />
+            <span>Powered by DigitekEra</span>
+          </a>
           <div className="flex items-center gap-4">
+            {config.social.facebook && (
+              <a
+                href={config.social.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 hover:opacity-80 transition-opacity"
+                aria-label="Facebook"
+                title="Facebook"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
+            )}
             {config.social.instagram && (
               <a
                 href={config.social.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 hover:opacity-80 transition-opacity"
+                aria-label="Instagram"
+                title="Instagram"
               >
                 <Instagram className="w-5 h-5" />
+              </a>
+            )}
+            {config.social.youtube && (
+              <a
+                href={config.social.youtube}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 hover:opacity-80 transition-opacity"
+                aria-label="YouTube"
+                title="YouTube"
+              >
+                <Youtube className="w-5 h-5" />
               </a>
             )}
             {config.social.twitter && (
@@ -100,6 +139,8 @@ export function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 hover:opacity-80 transition-opacity"
+                aria-label="X"
+                title="X"
               >
                 <Twitter className="w-5 h-5" />
               </a>

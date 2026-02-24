@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Search, Eye, X, ChevronDown, DollarSign, Loader2, CheckCircle, Clock, AlertCircle, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTenantStore } from '@/store/tenantStore';
 import { sendAcceptanceEmail } from '@/lib/api/email';
+import { getOrdersByTenant, updateOrder } from '@/lib/supabase/orders';
+import { supabase } from '@/supabase-client';
 
 type PaymentStatus = 'pending' | 'customer_claimed' | 'admin_confirmed';
 
@@ -158,13 +160,65 @@ const formatStatus = (status: string) => {
 export default function AdminOrders() {
   const { tenant } = useParams<{ tenant: string }>();
   const { config } = useTenantStore();
-  const [orders, setOrders] = useState<CustomOrder[]>(mockOrders);
+  const [orders, setOrders] = useState<CustomOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<CustomOrder | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priceInput, setPriceInput] = useState('');
   const [isSettingPrice, setIsSettingPrice] = useState(false);
   const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
+
+  // Load real data on mount and subscribe to real-time updates
+  useEffect(() => {
+    if (!tenant) return;
+
+    const loadOrders = async () => {
+      try {
+        setIsLoading(true);
+        console.log('[AdminOrders] Loading real-time data for tenant:', tenant);
+        const fetchedOrders = await getOrdersByTenant(tenant);
+        console.log('[AdminOrders] Loaded orders:', fetchedOrders.length);
+        setOrders(fetchedOrders);
+      } catch (error) {
+        console.error('[AdminOrders] Failed to load orders:', error);
+        toast.error('Failed to load orders');
+        setOrders([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadOrders();
+
+    // Subscribe to real-time changes
+    const channel = supabase
+      .channel(`orders:${tenant}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `tenant=eq.${tenant}`,
+        },
+        async (payload) => {
+          console.log('[AdminOrders] Real-time update received:', payload.eventType);
+          // Refetch orders when any change occurs
+          try {
+            const updatedOrders = await getOrdersByTenant(tenant);
+            setOrders(updatedOrders);
+          } catch (error) {
+            console.error('[AdminOrders] Failed to sync real-time update:', error);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [tenant]);
 
   if (!tenant || !config) return null;
 
@@ -176,16 +230,15 @@ export default function AdminOrders() {
     return matchesSearch && matchesStatus;
   });
 
-  const updateStatus = (orderId: string, newStatus: CustomOrder['status']) => {
-    setOrders(
-      orders.map((order) =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      )
-    );
-    if (selectedOrder?.id === orderId) {
-      setSelectedOrder({ ...selectedOrder, status: newStatus });
+  const updateStatus = async (orderId: string, newStatus: CustomOrder['status']) => {
+    try {
+      // Update in database (this will trigger real-time update)
+      await updateOrder(orderId, { status: newStatus });
+      toast.success(`Order status updated to ${formatStatus(newStatus)}`);
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      toast.error('Failed to update order status');
     }
-    toast.success(`Order status updated to ${formatStatus(newStatus)}`);
   };
 
   const updatePrice = async (orderId: string) => {
@@ -201,15 +254,8 @@ export default function AdminOrders() {
     setIsSettingPrice(true);
     
     try {
-      // Update local state first
-      setOrders(
-        orders.map((o) =>
-          o.id === orderId ? { ...o, price, status: 'price_sent' } : o
-        )
-      );
-      if (selectedOrder?.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, price, status: 'price_sent' });
-      }
+      // Update in database with price and status (this will trigger real-time update)
+      await updateOrder(orderId, { price, status: 'price_sent' });
       
       // Send acceptance email to customer
       const summary = `${getGarmentName(order.orderData.garment)} in ${getFabricName(order.orderData.fabric.type)} (${order.orderData.fabric.color}) with ${order.orderData.design.neckDesign} neck design`;
@@ -223,9 +269,8 @@ export default function AdminOrders() {
       
       toast.success('Order accepted! Email notification sent');
     } catch (error) {
-      console.error('Failed to send acceptance email:', error);
-      toast.success('Price updated successfully');
-      toast.error('Could not send email notification');
+      console.error('Failed to update price:', error);
+      toast.error('Failed to update order price');
     } finally {
       setIsSettingPrice(false);
       setPriceInput('');
@@ -250,27 +295,35 @@ export default function AdminOrders() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
+          <label htmlFor="search-orders" className="sr-only">Search orders</label>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
+            id="search-orders"
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search orders..."
             className="input-styled pl-10"
+            title="Search orders by ID or customer name"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="input-styled w-full sm:w-48"
-        >
-          <option value="all">All Status</option>
-          {statusOptions.map((status) => (
-            <option key={status} value={status}>
-              {formatStatus(status)}
-            </option>
-          ))}
-        </select>
+        <div>
+          <label htmlFor="status-filter" className="sr-only">Filter by status</label>
+          <select
+            id="status-filter"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="input-styled w-full sm:w-48"
+            title="Filter orders by status"
+          >
+            <option value="all">All Status</option>
+            {statusOptions.map((status) => (
+              <option key={status} value={status}>
+                {formatStatus(status)}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Orders Table */}
@@ -337,6 +390,8 @@ export default function AdminOrders() {
                     <button
                       onClick={() => setSelectedOrder(order)}
                       className="p-2 hover:bg-muted rounded-md transition-colors"
+                      title="View order details"
+                      aria-label="View order details"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
@@ -357,6 +412,8 @@ export default function AdminOrders() {
               <button
                 onClick={() => setSelectedOrder(null)}
                 className="p-2 hover:bg-muted rounded-md"
+                title="Close order details"
+                aria-label="Close order details"
               >
                 <X className="w-5 h-5" />
               </button>

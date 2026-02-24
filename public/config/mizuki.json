@@ -2,19 +2,21 @@
   "tenant_id": "mizuki",
   "brandName": "Mizuki",
   "tagline": "Bespoke Tailoring Excellence",
-  "description": "Contemporary Japanese-inspired custom tailoring for the modern minimalist. Handcrafted garments with precision and elegance.",
+  "description": "Premium custom tailoring from Tirupur, India's textile hub. Crafted with heritage techniques and modern precision, we bring authentic Indian textile artistry to every garment.",
   "primaryColor": "#1a1a1a",
   "secondaryColor": "#fafafa",
   "accentColor": "#2d2d2d",
   "logo": "/logos/mizuki.svg",
   "banner": "/banners/mizuki-hero.jpg",
   "social": {
-    "instagram": "https://instagram.com/mizuki",
-    "twitter": "https://twitter.com/mizuki"
+    "facebook": "https://www.facebook.com/mizukicouturier",
+    "instagram": "https://www.instagram.com/mizukicouturier",
+    "twitter": "https://x.com/mizukicouturier",
+    "youtube": "https://www.youtube.com/@mizukicouturier"
   },
   "payment": {
-    "upiId": "mizuki@upi",
-    "upiQrImage": "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=mizuki@upi"
+    "upiId": "aadharsh337@sbi",
+    "upiQrImage": "/logos/paymentqr.jpg"
   },
   "fabricOptions": [
     { "id": "cotton", "name": "Premium Cotton", "colors": ["White", "Black", "Navy", "Cream", "Sky Blue"] },

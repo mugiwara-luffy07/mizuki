@@ -220,3 +220,33 @@
   .stagger-3 { animation-delay: 0.3s; }
   .stagger-4 { animation-delay: 0.4s; }
 }
+
+/* CSS Compatibility Fixes */
+@layer base {
+  html, :host {
+    /* Support for all browsers with text-size-adjust */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Support user-select across browsers */
+  .select-none {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+  }
+
+  /* Support columns across browsers (if used) */
+  .columns-1 { 
+    -moz-columns: 1;
+    columns: 1; 
+  }
+  .columns-2 { 
+    -moz-columns: 2;
+    columns: 2; 
+  }
+  .columns-3 { 
+    -moz-columns: 3;
+    columns: 3; 
+  }
+}

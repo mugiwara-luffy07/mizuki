@@ -1,10 +1,38 @@
-import { Link, useParams } from 'react-router-dom';
-import { ArrowRight, Scissors, Ruler, Palette, Sparkles } from 'lucide-react';
+import { Link, useParams, useLocation } from 'react-router-dom';
+import { ArrowRight, Scissors, Ruler, Palette, Sparkles, LogOut, User } from 'lucide-react';
 import { useTenantStore } from '@/store/tenantStore';
+import { useAuthStore } from '@/store/authStore';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function Home() {
   const { tenant } = useParams<{ tenant: string }>();
+  const location = useLocation();
   const { config } = useTenantStore();
+  const { user, username, checkSession, signOut } = useAuthStore();
+  const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
+
+  // Check session on mount
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
+
+  // Show welcome message if coming from email verification or just logged in
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.verified || state?.message || state?.justLoggedIn) {
+      setShowWelcomeMessage(true);
+      if (state.message) {
+        toast.success(state.message);
+      } else if (state.justLoggedIn && username) {
+        toast.success(`Welcome back, ${username}!`);
+      } else if (username && state?.verified) {
+        toast.success(`Welcome, ${username}! Your email has been verified.`);
+      }
+      // Clear the state so message doesn't show again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, username]);
 
   if (!config || !tenant) return null;
 
@@ -31,8 +59,53 @@ export default function Home() {
     },
   ];
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   return (
     <div className="animate-fade-in">
+      {/* Auth Banner */}
+      <div className="container mx-auto px-4 py-4">
+        {/* Persistent User Greeting */}
+        {user && (
+          <div className="mb-4 bg-primary/5 border border-primary/20 rounded-lg p-4 animate-fade-in">
+            <div className="flex items-center gap-2">
+              <User className="w-5 h-5 text-primary" />
+              <p className="text-sm font-medium">
+                Welcome, <span className="font-bold text-primary">{username || user.email}</span>!
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Dismissible Welcome Message (shown once after login) */}
+        {showWelcomeMessage && user && (
+          <div className="mb-4 bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-400 rounded-lg p-4 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">👋</span>
+                <p className="text-sm font-medium">
+                  You've successfully logged in!
+                </p>
+              </div>
+              <button
+                onClick={() => setShowWelcomeMessage(false)}
+                className="text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 text-sm"
+                title="Dismiss welcome message"
+                aria-label="Dismiss welcome message"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Hero Section */}
       <section className="relative min-h-[70vh] md:min-h-[85vh] flex items-center justify-center overflow-hidden">
         <div
