@@ -4,7 +4,6 @@ import { Loader2 } from 'lucide-react';
 import { supabase } from '@/supabase-client';
 import { toast } from 'sonner';
 import { getImageUrl } from '@/lib/imageUtils';
-import { Button } from '@/components/ui/button';
 
 interface CustomProduct {
   id: string;
@@ -13,6 +12,11 @@ interface CustomProduct {
   description?: string;
   base_price: number;
   category: string;
+  fabric?: string;
+  sub_category?: string;
+  variety?: string;
+  design?: string;
+  colors?: string[];
   image_url?: string;
   measurement_keys: string[];
   measurement_video_url?: string;
@@ -21,9 +25,12 @@ interface CustomProduct {
 
 export default function CustomOrderList() {
   const { tenant } = useParams<{ tenant: string }>();
-  const [products, setProducts] = useState<CustomProduct[]>([]);
+  const [allProducts, setAllProducts] = useState<CustomProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
+  const [selectedVariety, setSelectedVariety] = useState<string>('All');
+  const [selectedFabric, setSelectedFabric] = useState<string>('All');
   const [resolvedImageMap, setResolvedImageMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -35,7 +42,7 @@ export default function CustomOrderList() {
   // Resolve product images (supabase:// → signed URLs)
   useEffect(() => {
     const resolveImages = async () => {
-      for (const product of products) {
+      for (const product of allProducts) {
         if (!product.image_url || resolvedImageMap[product.id]) continue;
         
         const resolved = await getImageUrl(product.image_url);
@@ -46,7 +53,7 @@ export default function CustomOrderList() {
     };
 
     resolveImages();
-  }, [products, resolvedImageMap]);
+  }, [allProducts, resolvedImageMap]);
 
   const loadProducts = async () => {
     setIsLoading(true);
@@ -58,7 +65,7 @@ export default function CustomOrderList() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setProducts(data || []);
+      setAllProducts(data || []);
     } catch (error: any) {
       console.error('Error loading custom products:', error);
       toast.error('Failed to load custom products');
@@ -66,6 +73,49 @@ export default function CustomOrderList() {
       setIsLoading(false);
     }
   };
+
+  const categories = ['All', ...new Set(allProducts.map((product) => product.category).filter(Boolean))] as string[];
+
+  const subCategories = [
+    'All',
+    ...new Set(
+      allProducts
+        .filter((product) => selectedCategory === 'All' || product.category === selectedCategory)
+        .map((product) => product.sub_category)
+        .filter((subCategory): subCategory is string => Boolean(subCategory))
+    ),
+  ] as string[];
+
+  const varieties = [
+    'All',
+    ...new Set(
+      allProducts
+        .filter((product) => selectedCategory === 'All' || product.category === selectedCategory)
+        .filter((product) => selectedSubCategory === 'All' || product.sub_category === selectedSubCategory)
+        .map((product) => product.variety)
+        .filter((variety): variety is string => Boolean(variety))
+    ),
+  ] as string[];
+
+  const fabrics = [
+    'All',
+    ...new Set(
+      allProducts
+        .filter((product) => selectedCategory === 'All' || product.category === selectedCategory)
+        .filter((product) => selectedSubCategory === 'All' || product.sub_category === selectedSubCategory)
+        .filter((product) => selectedVariety === 'All' || product.variety === selectedVariety)
+        .map((product) => product.fabric)
+        .filter((fabric): fabric is string => Boolean(fabric))
+    ),
+  ] as string[];
+
+  const filteredProducts = allProducts.filter((product) => {
+    if (selectedCategory !== 'All' && product.category !== selectedCategory) return false;
+    if (selectedSubCategory !== 'All' && product.sub_category !== selectedSubCategory) return false;
+    if (selectedVariety !== 'All' && product.variety !== selectedVariety) return false;
+    if (selectedFabric !== 'All' && product.fabric !== selectedFabric) return false;
+    return true;
+  });
 
   if (isLoading) {
     return (
@@ -83,42 +133,114 @@ export default function CustomOrderList() {
       </div>
 
       {/* Category Filters */}
-      {products.length > 0 && (
-        <div className="mb-8">
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={selectedCategory === 'all' ? 'default' : 'outline'}
-              onClick={() => setSelectedCategory('all')}
-              className="capitalize"
-            >
-              All
-            </Button>
-            {[...new Set(products.map(p => p.category).filter(Boolean))].map((category) => (
-              <Button
+      <div className="mb-8 space-y-4">
+        <div className="transition-all duration-300 animate-fade-in">
+          <p className="text-sm font-medium mb-2">Categories</p>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {categories.map((category) => (
+              <button
                 key={category}
-                variant={selectedCategory === category ? 'default' : 'outline'}
-                onClick={() => setSelectedCategory(category)}
-                className="capitalize"
+                type="button"
+                onClick={() => {
+                  setSelectedCategory(category);
+                  setSelectedSubCategory('All');
+                  setSelectedVariety('All');
+                  setSelectedFabric('All');
+                }}
+                className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
+                  selectedCategory === category
+                    ? 'bg-black text-white border-black scale-105 shadow-md'
+                    : 'bg-white text-black border hover:scale-105 hover:shadow-sm'
+                }`}
               >
                 {category}
-              </Button>
+              </button>
             ))}
           </div>
         </div>
-      )}
+
+        {selectedCategory !== 'All' && subCategories.length > 1 && (
+          <div className="transition-all duration-300 animate-fade-in">
+            <p className="text-sm font-medium mb-2">Sub Categories</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {subCategories.map((subCategory) => (
+                <button
+                  key={subCategory}
+                  type="button"
+                  onClick={() => {
+                    setSelectedSubCategory(subCategory);
+                    setSelectedVariety('All');
+                    setSelectedFabric('All');
+                  }}
+                  className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
+                    selectedSubCategory === subCategory
+                      ? 'bg-black text-white border-black scale-105 shadow-md'
+                      : 'bg-white text-black border hover:scale-105 hover:shadow-sm'
+                  }`}
+                >
+                  {subCategory}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selectedSubCategory !== 'All' && varieties.length > 1 && (
+          <div className="transition-all duration-300 animate-fade-in">
+            <p className="text-sm font-medium mb-2">Varieties</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {varieties.map((variety) => (
+                <button
+                  key={variety}
+                  type="button"
+                  onClick={() => {
+                    setSelectedVariety(variety);
+                    setSelectedFabric('All');
+                  }}
+                  className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
+                    selectedVariety === variety
+                      ? 'bg-black text-white border-black scale-105 shadow-md'
+                      : 'bg-white text-black border hover:scale-105 hover:shadow-sm'
+                  }`}
+                >
+                  {variety}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selectedVariety !== 'All' && fabrics.length > 1 && (
+          <div className="transition-all duration-300 animate-fade-in">
+            <p className="text-sm font-medium mb-2">Fabrics</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {fabrics.map((fabric) => (
+                <button
+                  key={fabric}
+                  type="button"
+                  onClick={() => setSelectedFabric(fabric)}
+                  className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
+                    selectedFabric === fabric
+                      ? 'bg-black text-white border-black scale-105 shadow-md'
+                      : 'bg-white text-black border hover:scale-105 hover:shadow-sm'
+                  }`}
+                >
+                  {fabric}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Products Grid */}
       {(() => {
-        const filteredProducts = selectedCategory === 'all' 
-          ? products 
-          : products.filter(p => p.category === selectedCategory);
-        
         return filteredProducts.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-muted-foreground text-lg">
-              {products.length === 0 
-                ? 'No custom products available at the moment.' 
-                : 'No products found in this category.'}
+              {selectedCategory === 'All'
+                ? 'No custom products available at the moment.'
+                : 'No products found for selected filters.'}
             </p>
           </div>
         ) : (

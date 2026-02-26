@@ -17,6 +17,11 @@ interface CustomProduct {
   description?: string;
   base_price: number;
   category: string;
+  fabric?: string;
+  sub_category?: string;
+  variety?: string;
+  design?: string;
+  colors?: string[];
   image_url?: string;
   measurement_keys: string[];
   measurement_video_url?: string;
@@ -43,6 +48,7 @@ export default function CustomOrderDetails() {
   const [resolvedImage, setResolvedImage] = useState<string>('');
   const [step, setStep] = useState<'measurements' | 'summary'>('measurements');
   const [enteredMeasurements, setEnteredMeasurements] = useState<Record<string, string>>({});
+  const [selectedColor, setSelectedColor] = useState<string>('');
 
   useEffect(() => {
     if (tenant && slug) {
@@ -115,6 +121,7 @@ export default function CustomOrderDetails() {
 
   const handleSubmitMeasurements = async () => {
     const selectedMeasurements = getSelectedMeasurements();
+    const availableColors = product?.colors || [];
     
     // Validate required fields
     for (const m of selectedMeasurements) {
@@ -122,6 +129,11 @@ export default function CustomOrderDetails() {
         toast.error(`${m.label} is required`);
         return;
       }
+    }
+
+    if (availableColors.length > 0 && !selectedColor) {
+      toast.error('Please select a color');
+      return;
     }
 
     setIsSubmitting(true);
@@ -177,8 +189,12 @@ export default function CustomOrderDetails() {
         slug: product!.slug,
         custom_data: {
           measurements: enteredMeasurements,
+          selected_color: selectedColor || null,
           is_custom: true,
           category: product!.category,
+          sub_category: product!.sub_category || null,
+          variety: product!.variety || null,
+          design: product!.design || null,
         },
       };
 
@@ -268,6 +284,40 @@ export default function CustomOrderDetails() {
               </div>
             )}
 
+            {/* Product Metadata */}
+            <div className="mb-6 bg-gray-50 rounded-lg p-4 text-sm">
+              <div className="space-y-2">
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Category</span>
+                  <span className="font-medium text-right">{product.category}</span>
+                </div>
+                {product.sub_category && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">Sub Category</span>
+                    <span className="font-medium text-right">{product.sub_category}</span>
+                  </div>
+                )}
+                {product.variety && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">Variety</span>
+                    <span className="font-medium text-right">{product.variety}</span>
+                  </div>
+                )}
+                {product.design && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">Design</span>
+                    <span className="font-medium text-right">{product.design}</span>
+                  </div>
+                )}
+                {product.fabric && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">Fabric</span>
+                    <span className="font-medium text-right">{product.fabric}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Measurements Step */}
             {step === 'measurements' && selectedMeasurements.length > 0 && (
               <div className="mb-6">
@@ -300,6 +350,25 @@ export default function CustomOrderDetails() {
               </div>
             )}
 
+            {/* Color Selection */}
+            {step === 'measurements' && (product.colors || []).length > 0 && (
+              <div className="mb-6">
+                <h2 className="font-semibold mb-4">Select Color <span className="text-destructive">*</span></h2>
+                <div className="flex flex-wrap gap-2">
+                  {(product.colors || []).map((color) => (
+                    <Button
+                      key={color}
+                      type="button"
+                      variant={selectedColor === color ? 'default' : 'outline'}
+                      onClick={() => setSelectedColor(color)}
+                    >
+                      {color}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Summary Step */}
             {step === 'summary' && (
               <div className="mb-6 space-y-4 p-4 bg-secondary/20 rounded-lg border border-border">
@@ -315,6 +384,44 @@ export default function CustomOrderDetails() {
                   <div className="flex justify-between items-start pb-3 border-b border-border">
                     <span className="text-sm text-muted-foreground">Base Price</span>
                     <span className="font-medium">₹{product.base_price.toLocaleString()}</span>
+                  </div>
+
+                  <div className="flex justify-between items-start pb-3 border-b border-border">
+                    <span className="text-sm text-muted-foreground">Category</span>
+                    <span className="font-medium text-right">{product.category}</span>
+                  </div>
+
+                  {product.sub_category && (
+                    <div className="flex justify-between items-start pb-3 border-b border-border">
+                      <span className="text-sm text-muted-foreground">Sub Category</span>
+                      <span className="font-medium text-right">{product.sub_category}</span>
+                    </div>
+                  )}
+
+                  {product.variety && (
+                    <div className="flex justify-between items-start pb-3 border-b border-border">
+                      <span className="text-sm text-muted-foreground">Variety</span>
+                      <span className="font-medium text-right">{product.variety}</span>
+                    </div>
+                  )}
+
+                  {product.design && (
+                    <div className="flex justify-between items-start pb-3 border-b border-border">
+                      <span className="text-sm text-muted-foreground">Design</span>
+                      <span className="font-medium text-right">{product.design}</span>
+                    </div>
+                  )}
+
+                  {product.fabric && (
+                    <div className="flex justify-between items-start pb-3 border-b border-border">
+                      <span className="text-sm text-muted-foreground">Fabric</span>
+                      <span className="font-medium text-right">{product.fabric}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-start pb-3 border-b border-border">
+                    <span className="text-sm text-muted-foreground">Selected Color</span>
+                    <span className="font-semibold text-right">{selectedColor || 'Not selected'}</span>
                   </div>
 
                   {selectedMeasurements.length > 0 && (
@@ -357,7 +464,7 @@ export default function CustomOrderDetails() {
 
           {/* CTA Section */}
           <div className="pt-6 border-t border-border space-y-3">
-            {step === 'measurements' && selectedMeasurements.length > 0 && (
+            {step === 'measurements' && (selectedMeasurements.length > 0 || (product.colors || []).length > 0) && (
               <Button 
                 onClick={handleSubmitMeasurements}
                 disabled={isSubmitting}
@@ -396,7 +503,9 @@ export default function CustomOrderDetails() {
             {selectedMeasurements.length === 0 && step === 'measurements' && (
               <div className="bg-secondary/50 p-4 rounded-lg">
                 <p className="text-sm text-muted-foreground text-center">
-                  No measurements needed for this product
+                  {(product.colors || []).length > 0
+                    ? 'No measurements needed for this product. Please select a color to continue.'
+                    : 'No measurements needed for this product'}
                 </p>
               </div>
             )}

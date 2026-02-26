@@ -18,6 +18,11 @@ interface CustomProduct {
   description?: string;
   base_price: number;
   category: string;
+  fabric?: string;
+  sub_category?: string;
+  variety?: string;
+  design?: string;
+  colors?: string[];
   image_url?: string;
   measurement_keys: string[];
   measurement_video_url?: string;
@@ -43,6 +48,11 @@ export default function AdminCustomProducts() {
   const [formData, setFormData] = useState<Partial<CustomProduct>>({
     name: '',
     category: '',
+    fabric: '',
+    sub_category: '',
+    variety: '',
+    design: '',
+    colors: [],
     base_price: 0,
     description: '',
     image_url: '',
@@ -50,6 +60,7 @@ export default function AdminCustomProducts() {
     measurement_video_url: '',
     is_active: true,
   });
+  const [colorInput, setColorInput] = useState('');
   const [imageInput, setImageInput] = useState('');
   const [resolvedAdminImage, setResolvedAdminImage] = useState<string>('');
   const [resolvedProductListImages, setResolvedProductListImages] = useState<{[key: string]: string}>({});
@@ -137,6 +148,11 @@ export default function AdminCustomProducts() {
       setFormData({
         name: product.name || '',
         category: product.category || '',
+        fabric: product.fabric || '',
+        sub_category: product.sub_category || '',
+        variety: product.variety || '',
+        design: product.design || '',
+        colors: product.colors || [],
         base_price: product.base_price || 0,
         description: product.description || '',
         image_url: product.image_url || '',
@@ -150,6 +166,11 @@ export default function AdminCustomProducts() {
       setFormData({
         name: '',
         category: '',
+        fabric: '',
+        sub_category: '',
+        variety: '',
+        design: '',
+        colors: [],
         base_price: 0,
         description: '',
         image_url: '',
@@ -166,6 +187,7 @@ export default function AdminCustomProducts() {
     setIsModalOpen(false);
     setEditingProduct(null);
     setImageInput('');
+    setColorInput('');
     setResolvedAdminImage('');
   };
 
@@ -249,6 +271,28 @@ export default function AdminCustomProducts() {
     setFormData({ ...formData, measurement_keys: measurementKeys });
   };
 
+  const handleAddColor = () => {
+    const color = colorInput.trim();
+    if (!color) return;
+
+    const existingColors = formData.colors || [];
+    const alreadyExists = existingColors.some(c => c.toLowerCase() === color.toLowerCase());
+    if (alreadyExists) {
+      toast.error('Color already added');
+      return;
+    }
+
+    setFormData({ ...formData, colors: [...existingColors, color] });
+    setColorInput('');
+  };
+
+  const handleRemoveColor = (colorToRemove: string) => {
+    setFormData({
+      ...formData,
+      colors: (formData.colors || []).filter(color => color !== colorToRemove),
+    });
+  };
+
   const handleSave = async () => {
     // Prevent multiple submissions
     if (isSaving) {
@@ -272,6 +316,11 @@ export default function AdminCustomProducts() {
         name: String(formData.name || '').trim(),
         slug: slug,
         category: String(formData.category || '').trim(),
+        fabric: String(formData.fabric || '').trim(),
+        sub_category: String(formData.sub_category || '').trim(),
+        variety: String(formData.variety || '').trim(),
+        design: String(formData.design || '').trim(),
+        colors: (formData.colors || []).map(c => String(c).trim()).filter(Boolean),
         base_price: Number(formData.base_price) || 0,
         description: String(formData.description || '').trim(),
         image_url: String(formData.image_url || '').trim(),
@@ -501,6 +550,89 @@ export default function AdminCustomProducts() {
                   placeholder="e.g., Custom Saree, Bespoke Blouse"
                 />
               </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="sub_category">Sub Category</Label>
+                <Input
+                  id="sub_category"
+                  value={formData.sub_category || ''}
+                  onChange={(e) => setFormData({ ...formData, sub_category: e.target.value })}
+                  placeholder="e.g., Bridal, Party Wear"
+                />
+              </div>
+              <div>
+                <Label htmlFor="variety">Variety</Label>
+                <Input
+                  id="variety"
+                  value={formData.variety || ''}
+                  onChange={(e) => setFormData({ ...formData, variety: e.target.value })}
+                  placeholder="e.g., Handloom"
+                />
+              </div>
+              <div>
+                <Label htmlFor="design">Design</Label>
+                <Input
+                  id="design"
+                  value={formData.design || ''}
+                  onChange={(e) => setFormData({ ...formData, design: e.target.value })}
+                  placeholder="e.g., Floral"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <Label htmlFor="fabric">Fabric</Label>
+                <Input
+                  id="fabric"
+                  value={formData.fabric || ''}
+                  onChange={(e) => setFormData({ ...formData, fabric: e.target.value })}
+                  placeholder="e.g., Silk"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label>Colors</Label>
+              <div className="flex gap-2 mt-2">
+                <Input
+                  value={colorInput}
+                  onChange={(e) => setColorInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddColor();
+                    }
+                  }}
+                  placeholder="Enter color (e.g., Red)"
+                />
+                <Button type="button" onClick={handleAddColor} variant="outline">
+                  Add Color
+                </Button>
+              </div>
+
+              {(formData.colors || []).length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {(formData.colors || []).map((color) => (
+                    <span
+                      key={color}
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded bg-secondary text-secondary-foreground text-sm"
+                    >
+                      {color}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveColor(color)}
+                        className="hover:text-destructive"
+                        aria-label={`Remove ${color}`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
