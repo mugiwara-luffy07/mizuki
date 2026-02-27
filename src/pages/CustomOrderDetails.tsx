@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, Loader2, Check } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Loader2, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/supabase-client';
 import { toast } from 'sonner';
 import { getImageUrl } from '@/lib/imageUtils';
@@ -22,6 +22,7 @@ interface CustomProduct {
   variety?: string;
   design?: string;
   colors?: string[];
+  images?: string[];
   image_url?: string;
   measurement_keys: string[];
   measurement_video_url?: string;
@@ -45,7 +46,9 @@ export default function CustomOrderDetails() {
   const [measurements, setMeasurements] = useState<MeasurementMaster[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [resolvedImage, setResolvedImage] = useState<string>('');
+  const [resolvedImageMap, setResolvedImageMap] = useState<Record<string, string>>({});
+  const [selectedImageRef, setSelectedImageRef] = useState<string>('');
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [step, setStep] = useState<'measurements' | 'summary'>('measurements');
   const [enteredMeasurements, setEnteredMeasurements] = useState<Record<string, string>>({});
   const [selectedColor, setSelectedColor] = useState<string>('');
@@ -57,19 +60,37 @@ export default function CustomOrderDetails() {
     }
   }, [tenant, slug]);
 
-  // Resolve product image (supabase:// → signed URL)
+  // Resolve product images (supabase:// → signed URLs)
   useEffect(() => {
-    const resolveImage = async () => {
-      if (!product?.image_url) return;
-      
-      const resolved = await getImageUrl(product.image_url);
-      if (resolved) {
-        setResolvedImage(resolved);
+    const resolveImages = async () => {
+      if (!product) return;
+
+      const refs = product.images && product.images.length > 0
+        ? product.images
+        : (product.image_url ? [product.image_url] : []);
+
+      for (const ref of refs) {
+        if (!ref || resolvedImageMap[ref]) continue;
+        if (!ref.startsWith('supabase://')) continue;
+
+        const resolved = await getImageUrl(ref);
+        if (resolved) {
+          setResolvedImageMap(prev => ({ ...prev, [ref]: resolved }));
+        }
       }
     };
 
-    resolveImage();
-  }, [product?.image_url]);
+    resolveImages();
+  }, [product, resolvedImageMap]);
+
+  useEffect(() => {
+    if (!product) return;
+    const refs = product.images && product.images.length > 0
+      ? product.images
+      : (product.image_url ? [product.image_url] : []);
+
+    setSelectedImageRef(refs[0] || '');
+  }, [product?.id, product?.images, product?.image_url]);
 
   const loadProduct = async () => {
     if (!tenant || !slug) return;
@@ -179,12 +200,20 @@ export default function CustomOrderDetails() {
     }
 
     try {
+      const imageRefs = product!.images && product!.images.length > 0
+        ? product!.images
+        : (product!.image_url ? [product!.image_url] : []);
+      const primaryImageRef = selectedImageRef || imageRefs[0] || '';
+      const cartImage = primaryImageRef
+        ? (resolvedImageMap[primaryImageRef] || primaryImageRef)
+        : '';
+
       // Create cart item with custom product data
       const cartItem = {
         product_id: product!.id,
         name: product!.name,
         price: product!.base_price,
-        image: resolvedImage || product!.image_url || '',
+        image: cartImage,
         quantity: 1, // Custom products are typically quantity 1
         slug: product!.slug,
         custom_data: {
@@ -235,6 +264,29 @@ export default function CustomOrderDetails() {
   }
 
   const selectedMeasurements = getSelectedMeasurements();
+  const productImageRefs = product.images && product.images.length > 0
+    ? product.images
+    : (product.image_url ? [product.image_url] : []);
+  const activeImageRef = selectedImageRef || productImageRefs[0] || '';
+  const activeImageUrl = activeImageRef
+    ? (resolvedImageMap[activeImageRef] || (!activeImageRef.startsWith('supabase://') ? activeImageRef : ''))
+    : '';
+
+  const handleNextImage = () => {
+    if (productImageRefs.length <= 1) return;
+    const currentIndex = productImageRefs.indexOf(activeImageRef);
+    const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % productImageRefs.length : 0;
+    setSelectedImageRef(productImageRefs[nextIndex]);
+  };
+
+  const handlePrevImage = () => {
+    if (productImageRefs.length <= 1) return;
+    const currentIndex = productImageRefs.indexOf(activeImageRef);
+    const prevIndex = currentIndex >= 0
+      ? (currentIndex - 1 + productImageRefs.length) % productImageRefs.length
+      : 0;
+    setSelectedImageRef(productImageRefs[prevIndex]);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 animate-fade-in">
@@ -249,15 +301,72 @@ export default function CustomOrderDetails() {
       {/* Product Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Image */}
-        <div className="bg-muted rounded-lg overflow-hidden aspect-[3/4] flex items-center justify-center">
-          {product.image_url ? (
-            <img
-              src={resolvedImage || product.image_url}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="text-muted-foreground">No Image</div>
+        <div className="space-y-3">
+          <div
+            className="relative bg-muted rounded-lg overflow-hidden aspect-[3/4] flex items-center justify-center"
+            onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+            onTouchEnd={(e) => {
+              if (touchStartX === null || productImageRefs.length <= 1) return;
+              const deltaX = e.changedTouches[0].clientX - touchStartX;
+              if (deltaX <= -50) handleNextImage();
+              if (deltaX >= 50) handlePrevImage();
+              setTouchStartX(null);
+            }}
+          >
+            {activeImageUrl ? (
+              <img
+                src={activeImageUrl}
+                alt={product.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="text-muted-foreground">No Image</div>
+            )}
+
+            {productImageRefs.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePrevImage}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/75 text-white rounded-full p-2"
+                  aria-label="Previous image"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextImage}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/75 text-white rounded-full p-2"
+                  aria-label="Next image"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </>
+            )}
+          </div>
+
+          {productImageRefs.length > 1 && (
+            <div className="grid grid-cols-4 gap-2">
+              {productImageRefs.map((ref, index) => {
+                const thumbUrl = resolvedImageMap[ref] || (!ref.startsWith('supabase://') ? ref : '');
+                return (
+                  <button
+                    key={`${ref}-${index}`}
+                    type="button"
+                    onClick={() => setSelectedImageRef(ref)}
+                    className={`aspect-square rounded-md overflow-hidden border ${activeImageRef === ref ? 'border-primary' : 'border-border'}`}
+                  >
+                    {thumbUrl ? (
+                      <img src={thumbUrl} alt={`${product.name} ${index + 1}`} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-muted flex items-center justify-center text-[10px] text-muted-foreground">
+                        ...
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
 

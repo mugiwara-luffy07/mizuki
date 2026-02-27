@@ -17,6 +17,7 @@ interface CustomProduct {
   variety?: string;
   design?: string;
   colors?: string[];
+  images?: string[];
   image_url?: string;
   measurement_keys: string[];
   measurement_video_url?: string;
@@ -43,9 +44,13 @@ export default function CustomOrderList() {
   useEffect(() => {
     const resolveImages = async () => {
       for (const product of allProducts) {
-        if (!product.image_url || resolvedImageMap[product.id]) continue;
+        const primaryImageRef = (product.images && product.images.length > 0)
+          ? product.images[0]
+          : product.image_url;
+
+        if (!primaryImageRef || resolvedImageMap[product.id]) continue;
         
-        const resolved = await getImageUrl(product.image_url);
+        const resolved = await getImageUrl(primaryImageRef);
         if (resolved) {
           setResolvedImageMap(prev => ({ ...prev, [product.id]: resolved }));
         }
@@ -254,17 +259,32 @@ export default function CustomOrderList() {
               <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
                 {/* Image */}
                 <div className="aspect-[3/4] bg-muted overflow-hidden relative">
-                  {product.image_url ? (
-                    <img
-                      src={resolvedImageMap[product.id] || product.image_url}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                      No Image
-                    </div>
-                  )}
+                  {(() => {
+                    const primaryImageRef = (product.images && product.images.length > 0)
+                      ? product.images[0]
+                      : product.image_url;
+
+                    if (!primaryImageRef) {
+                      return (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          No Image
+                        </div>
+                      );
+                    }
+
+                    const displayUrl = resolvedImageMap[product.id] || (!primaryImageRef.startsWith('supabase://') ? primaryImageRef : '');
+                    return displayUrl ? (
+                      <img
+                        src={displayUrl}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+                        Loading...
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Product Info */}

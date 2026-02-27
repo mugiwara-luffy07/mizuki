@@ -23,6 +23,7 @@ interface CustomProduct {
   variety?: string;
   design?: string;
   colors?: string[];
+  images?: string[];
   image_url?: string;
   measurement_keys: string[];
   measurement_video_url?: string;
@@ -39,6 +40,7 @@ interface MeasurementMaster {
 
 export default function AdminCustomProducts() {
   const { tenant } = useParams<{ tenant: string }>();
+  const MAX_IMAGES = 10;
   const [products, setProducts] = useState<CustomProduct[]>([]);
   const [measurements, setMeasurements] = useState<MeasurementMaster[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,6 +55,7 @@ export default function AdminCustomProducts() {
     variety: '',
     design: '',
     colors: [],
+    images: [],
     base_price: 0,
     description: '',
     image_url: '',
@@ -62,7 +65,9 @@ export default function AdminCustomProducts() {
   });
   const [colorInput, setColorInput] = useState('');
   const [imageInput, setImageInput] = useState('');
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [resolvedAdminImage, setResolvedAdminImage] = useState<string>('');
+  const [resolvedModalImages, setResolvedModalImages] = useState<{[key: string]: string}>({});
   const [resolvedProductListImages, setResolvedProductListImages] = useState<{[key: string]: string}>({});
 
   useEffect(() => {
@@ -87,14 +92,34 @@ export default function AdminCustomProducts() {
     resolveImage();
   }, [formData.image_url, resolvedAdminImage]);
 
+  useEffect(() => {
+    const resolveModalImages = async () => {
+      for (const imageUrl of imageUrls) {
+        if (!imageUrl || resolvedModalImages[imageUrl]) continue;
+        if (!imageUrl.startsWith('supabase://')) continue;
+
+        const resolved = await getImageUrl(imageUrl);
+        if (resolved) {
+          setResolvedModalImages(prev => ({ ...prev, [imageUrl]: resolved }));
+        }
+      }
+    };
+
+    resolveModalImages();
+  }, [imageUrls, resolvedModalImages]);
+
   // Resolve product list thumbnail images (supabase:// → signed URLs)
   useEffect(() => {
     const resolveProductImages = async () => {
       for (const product of products) {
-        if (product.image_url && !resolvedProductListImages[product.image_url]) {
-          const resolved = await getImageUrl(product.image_url);
+        const primaryImageRef = (product.images && product.images.length > 0)
+          ? product.images[0]
+          : product.image_url;
+
+        if (primaryImageRef && !resolvedProductListImages[primaryImageRef]) {
+          const resolved = await getImageUrl(primaryImageRef);
           if (resolved) {
-            setResolvedProductListImages(prev => ({ ...prev, [product.image_url!]: resolved }));
+            setResolvedProductListImages(prev => ({ ...prev, [primaryImageRef]: resolved }));
           }
         }
       }
@@ -153,6 +178,7 @@ export default function AdminCustomProducts() {
         variety: product.variety || '',
         design: product.design || '',
         colors: product.colors || [],
+        images: product.images || (product.image_url ? [product.image_url] : []),
         base_price: product.base_price || 0,
         description: product.description || '',
         image_url: product.image_url || '',
@@ -160,6 +186,7 @@ export default function AdminCustomProducts() {
         measurement_video_url: product.measurement_video_url || '',
         is_active: product.is_active ?? true,
       });
+      setImageUrls(product.images && product.images.length > 0 ? product.images : (product.image_url ? [product.image_url] : []));
       setResolvedAdminImage('');
     } else {
       setEditingProduct(null);
@@ -171,6 +198,7 @@ export default function AdminCustomProducts() {
         variety: '',
         design: '',
         colors: [],
+        images: [],
         base_price: 0,
         description: '',
         image_url: '',
@@ -178,6 +206,7 @@ export default function AdminCustomProducts() {
         measurement_video_url: '',
         is_active: true,
       });
+      setImageUrls([]);
       setResolvedAdminImage('');
     }
     setIsModalOpen(true);
@@ -187,8 +216,10 @@ export default function AdminCustomProducts() {
     setIsModalOpen(false);
     setEditingProduct(null);
     setImageInput('');
+    setImageUrls([]);
     setColorInput('');
     setResolvedAdminImage('');
+    setResolvedModalImages({});
   };
 
   const validateForm = () => {
@@ -202,48 +233,71 @@ export default function AdminCustomProducts() {
     return true;
   };
 
-  const handleAddImage = async (fileToUpload?: File) => {
+  const handleAddImage = async (filesToUpload?: File[]) => {
+    if (imageUrls.length >= MAX_IMAGES && !imageInput.trim()) {
+      toast.error(`Maximum ${MAX_IMAGES} images allowed`);
+      return;
+    }
+
     if (imageInput.trim()) {
       // URL input mode - add HTTP URL directly
       const imageUrl = imageInput.trim();
-      setFormData({ ...formData, image_url: imageUrl });
+      if (imageUrls.length >= MAX_IMAGES) {
+        toast.error(`Maximum ${MAX_IMAGES} images allowed`);
+        return;
+      }
+      const nextImageUrls = [...imageUrls, imageUrl];
+      setImageUrls(nextImageUrls);
+      setFormData({ ...formData, image_url: nextImageUrls[0] || '', images: nextImageUrls });
       setImageInput('');
       toast.success('Image URL added');
-    } else if (fileToUpload) {
+    } else if (filesToUpload && filesToUpload.length > 0) {
       // File upload mode - upload to Supabase Storage (same as products)
       try {
-        // Validate file
-        const maxSizeBytes = 10 * 1024 * 1024; // 10MB
-        if (fileToUpload.size > maxSizeBytes) {
-          toast.error(`File too large. Maximum size: 10MB. Your file: ${(fileToUpload.size / 1024 / 1024).toFixed(1)}MB`);
-          return;
+        const remainingSlots = MAX_IMAGES - imageUrls.length;
+        const files = filesToUpload.slice(0, remainingSlots);
+
+        if (filesToUpload.length > remainingSlots) {
+          toast.error(`Only ${remainingSlots} more image(s) can be added`);
         }
 
-        // Generate unique filename using UUID
-        const fileExtension = fileToUpload.name.split('.').pop() || 'jpg';
-        const uniqueFilename = `${crypto.randomUUID()}.${fileExtension}`;
+        const uploadedReferences: string[] = [];
 
-        // Upload to Supabase Storage (same bucket as products)
-        console.log('Uploading file to storage:', uniqueFilename);
-        const { data, error } = await supabase.storage
-          .from('product-images')
-          .upload(uniqueFilename, fileToUpload, {
-            cacheControl: '3600',
-            upsert: false,
-          });
+        for (const fileToUpload of files) {
+          const maxSizeBytes = 10 * 1024 * 1024; // 10MB
+          if (fileToUpload.size > maxSizeBytes) {
+            toast.error(`File too large: ${fileToUpload.name} (max 10MB)`);
+            continue;
+          }
 
-        if (error) {
-          console.error('Storage upload error:', error);
-          toast.error(`Upload failed: ${error.message}`);
-          return;
+          const fileExtension = fileToUpload.name.split('.').pop() || 'jpg';
+          const uniqueFilename = `${crypto.randomUUID()}.${fileExtension}`;
+
+          console.log('Uploading file to storage:', uniqueFilename);
+          const { data, error } = await supabase.storage
+            .from('product-images')
+            .upload(uniqueFilename, fileToUpload, {
+              cacheControl: '3600',
+              upsert: false,
+            });
+
+          if (error) {
+            console.error('Storage upload error:', error);
+            toast.error(`Upload failed for ${fileToUpload.name}: ${error.message}`);
+            continue;
+          }
+
+          const imageReference = `supabase://product-images/${data.path}`;
+          console.log('File uploaded successfully:', imageReference);
+          uploadedReferences.push(imageReference);
         }
 
-        // Create supabase:// reference (same format as products)
-        const imageReference = `supabase://product-images/${data.path}`;
-        console.log('File uploaded successfully:', imageReference);
-
-        setFormData({ ...formData, image_url: imageReference });
-        toast.success('Image uploaded successfully');
+        if (uploadedReferences.length > 0) {
+          const nextImageUrls = [...imageUrls, ...uploadedReferences].slice(0, MAX_IMAGES);
+          setImageUrls(nextImageUrls);
+          setFormData({ ...formData, image_url: nextImageUrls[0] || '', images: nextImageUrls });
+          toast.success(`${uploadedReferences.length} image(s) uploaded successfully`);
+        }
       } catch (error: any) {
         console.error('Image upload error:', error);
         toast.error(`Upload failed: ${error.message || 'Unknown error'}`);
@@ -251,8 +305,10 @@ export default function AdminCustomProducts() {
     }
   };
 
-  const handleRemoveImage = () => {
-    setFormData({ ...formData, image_url: '' });
+  const handleRemoveImage = (indexToRemove: number) => {
+    const nextImageUrls = imageUrls.filter((_, index) => index !== indexToRemove);
+    setImageUrls(nextImageUrls);
+    setFormData({ ...formData, image_url: nextImageUrls[0] || '', images: nextImageUrls });
     setResolvedAdminImage('');
   };
 
@@ -321,9 +377,10 @@ export default function AdminCustomProducts() {
         variety: String(formData.variety || '').trim(),
         design: String(formData.design || '').trim(),
         colors: (formData.colors || []).map(c => String(c).trim()).filter(Boolean),
+        images: imageUrls.map(url => String(url).trim()).filter(Boolean),
         base_price: Number(formData.base_price) || 0,
         description: String(formData.description || '').trim(),
-        image_url: String(formData.image_url || '').trim(),
+        image_url: String((imageUrls[0] || formData.image_url || '')).trim(),
         measurement_keys: (formData.measurement_keys || []).map(k => String(k).trim()),
         measurement_video_url: String(formData.measurement_video_url || '').trim(),
         is_active: Boolean(formData.is_active ?? true),
@@ -452,12 +509,32 @@ export default function AdminCustomProducts() {
                   <tr key={product.id} className="hover:bg-muted/30">
                     <td className="px-4 py-3">
                       <div className="w-16 h-16 rounded-md overflow-hidden bg-muted">
-                        {product.image_url ? (
-                          <img
-                            src={resolvedProductListImages[product.image_url] || product.image_url}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
+                        {((product.images && product.images[0]) || product.image_url) ? (
+                          (() => {
+                            const primaryImageRef = (product.images && product.images.length > 0)
+                              ? product.images[0]
+                              : product.image_url;
+                            if (!primaryImageRef) {
+                              return (
+                                <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                                  No Image
+                                </div>
+                              );
+                            }
+
+                            const displayUrl = resolvedProductListImages[primaryImageRef] || (!primaryImageRef.startsWith('supabase://') ? primaryImageRef : '');
+                            return displayUrl ? (
+                              <img
+                                src={displayUrl}
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                                Loading...
+                              </div>
+                            );
+                          })()
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
                             No Image
@@ -717,37 +794,59 @@ export default function AdminCustomProducts() {
                     id="file-upload"
                     type="file"
                     accept="image/*"
+                    multiple
                     className="hidden"
                     onChange={async (e) => {
-                      if (e.target.files?.[0]) {
-                        await handleAddImage(e.target.files[0]);
+                      if (e.target.files && e.target.files.length > 0) {
+                        await handleAddImage(Array.from(e.target.files));
                       }
                     }}
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  💡 Upload: max 10MB per file | Link: paste direct HTTPS URLs
+                  💡 Upload: max 10 images, 10MB per file | Link: paste direct HTTPS URLs
                 </p>
               </div>
 
-              {formData.image_url && (
-                <div className="mt-4">
-                  <div className="flex items-center gap-2 p-2 border border-border rounded-md">
-                    <div className="w-20 h-20 rounded-md overflow-hidden bg-muted flex-shrink-0">
-                      <img src={resolvedAdminImage || formData.image_url} alt="Product" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Product Image</p>
-                      <p className="text-xs text-muted-foreground truncate">{formData.image_url}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleRemoveImage}
-                      className="text-destructive"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
+              {imageUrls.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm font-medium">Product Images ({imageUrls.length}/{MAX_IMAGES})</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {imageUrls.map((imageUrl, index) => (
+                      <div key={`${imageUrl}-${index}`} className="flex items-center gap-2 p-2 border border-border rounded-md">
+                        <div className="w-16 h-16 rounded-md overflow-hidden bg-muted flex-shrink-0">
+                          {(() => {
+                            const resolved = index === 0 ? resolvedAdminImage : resolvedModalImages[imageUrl];
+                            const displayUrl = resolved || (!imageUrl.startsWith('supabase://') ? imageUrl : '');
+
+                            return displayUrl ? (
+                              <img
+                                src={displayUrl}
+                                alt={`Product ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">
+                                Loading...
+                              </div>
+                            );
+                          })()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium">{index === 0 ? 'Primary' : `Image ${index + 1}`}</p>
+                          <p className="text-xs text-muted-foreground truncate">{imageUrl}</p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveImage(index)}
+                          className="text-destructive"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
