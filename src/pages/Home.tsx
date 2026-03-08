@@ -74,11 +74,21 @@ export default function Home() {
         {/* Persistent User Greeting */}
         {user && (
           <div className="mb-4 bg-primary/5 border border-primary/20 rounded-lg p-4 animate-fade-in">
-            <div className="flex items-center gap-2">
-              <User className="w-5 h-5 text-primary" />
-              <p className="text-sm font-medium">
-                Welcome, <span className="font-bold text-primary">{username || user.email}</span>!
-              </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <User className="w-5 h-5 text-primary" />
+                <p className="text-sm font-medium">
+                  Welcome, <span className="font-bold text-primary">{username || user.email}</span>!
+                </p>
+              </div>
+              <a
+                href="https://wa.me/919942322743"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1 bg-green-600 text-white text-xs rounded-md hover:bg-green-700 transition-colors"
+              >
+                Book an Appointment
+              </a>
             </div>
           </div>
         )}

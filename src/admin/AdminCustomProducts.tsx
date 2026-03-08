@@ -22,6 +22,9 @@ interface CustomProduct {
   sub_category?: string;
   variety?: string;
   design?: string;
+  option1?: string;
+  option2?: string;
+  option3?: string;
   colors?: string[];
   images?: string[];
   image_url?: string;
@@ -54,6 +57,9 @@ export default function AdminCustomProducts() {
     sub_category: '',
     variety: '',
     design: '',
+    option1: '',
+    option2: '',
+    option3: '',
     colors: [],
     images: [],
     base_price: 0,
@@ -177,6 +183,9 @@ export default function AdminCustomProducts() {
         sub_category: product.sub_category || '',
         variety: product.variety || '',
         design: product.design || '',
+        option1: product.option1 || '',
+        option2: product.option2 || '',
+        option3: product.option3 || '',
         colors: product.colors || [],
         images: product.images || (product.image_url ? [product.image_url] : []),
         base_price: product.base_price || 0,
@@ -197,6 +206,9 @@ export default function AdminCustomProducts() {
         sub_category: '',
         variety: '',
         design: '',
+        option1: '',
+        option2: '',
+        option3: '',
         colors: [],
         images: [],
         base_price: 0,
@@ -376,6 +388,9 @@ export default function AdminCustomProducts() {
         sub_category: String(formData.sub_category || '').trim(),
         variety: String(formData.variety || '').trim(),
         design: String(formData.design || '').trim(),
+        option1: String(formData.option1 || '').trim(),
+        option2: String(formData.option2 || '').trim(),
+        option3: String(formData.option3 || '').trim(),
         colors: (formData.colors || []).map(c => String(c).trim()).filter(Boolean),
         images: imageUrls.map(url => String(url).trim()).filter(Boolean),
         base_price: Number(formData.base_price) || 0,
@@ -655,6 +670,36 @@ export default function AdminCustomProducts() {
                   value={formData.design || ''}
                   onChange={(e) => setFormData({ ...formData, design: e.target.value })}
                   placeholder="e.g., Floral"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="option1">Option 1</Label>
+                <Input
+                  id="option1"
+                  value={formData.option1 || ''}
+                  onChange={(e) => setFormData({ ...formData, option1: e.target.value })}
+                  placeholder="Option 1 (e.g., Neck Style)"
+                />
+              </div>
+              <div>
+                <Label htmlFor="option2">Option 2</Label>
+                <Input
+                  id="option2"
+                  value={formData.option2 || ''}
+                  onChange={(e) => setFormData({ ...formData, option2: e.target.value })}
+                  placeholder="Option 2 (e.g., Sleeve Style)"
+                />
+              </div>
+              <div>
+                <Label htmlFor="option3">Option 3</Label>
+                <Input
+                  id="option3"
+                  value={formData.option3 || ''}
+                  onChange={(e) => setFormData({ ...formData, option3: e.target.value })}
+                  placeholder="Option 3 (e.g., Back Style)"
                 />
               </div>
             </div>

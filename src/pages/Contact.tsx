@@ -9,9 +9,19 @@ export default function Contact() {
     <div className="container mx-auto px-4 py-16 animate-fade-in">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-semibold mb-4 text-center">Contact Us</h1>
-        <p className="text-muted-foreground text-center mb-12">
+        <p className="text-muted-foreground text-center mb-6">
           We'd love to hear from you. Get in touch with us!
         </p>
+        <div className="text-center mb-8">
+          <a
+            href="https://wa.me/919942322743"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block px-6 py-3 bg-green-600 text-white text-lg rounded-md hover:bg-green-700 transition-colors"
+          >
+            Book an Appointment
+          </a>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           <Card>

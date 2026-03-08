@@ -430,7 +430,17 @@ export default function CustomOrderDetails() {
             {/* Measurements Step */}
             {step === 'measurements' && selectedMeasurements.length > 0 && (
               <div className="mb-6">
-                <h2 className="font-semibold mb-4">Enter Your Measurements</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-semibold">Enter Your Measurements</h2>
+                  <a
+                    href="https://wa.me/919942322743"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
+                  >
+                    Book Appointment for Measurements Enquiry
+                  </a>
+                </div>
                 <div className="space-y-4 p-4 bg-secondary/30 rounded-lg">
                   {selectedMeasurements.map((m) => (
                     <div key={m.key}>

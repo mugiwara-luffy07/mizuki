@@ -16,6 +16,9 @@ interface CustomProduct {
   sub_category?: string;
   variety?: string;
   design?: string;
+  option1?: string;
+  option2?: string;
+  option3?: string;
   colors?: string[];
   images?: string[];
   image_url?: string;
@@ -32,6 +35,10 @@ export default function CustomOrderList() {
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
   const [selectedVariety, setSelectedVariety] = useState<string>('All');
   const [selectedFabric, setSelectedFabric] = useState<string>('All');
+  const [selectedDesign, setSelectedDesign] = useState<string>('All');
+  const [selectedOption1, setSelectedOption1] = useState<string>('All');
+  const [selectedOption2, setSelectedOption2] = useState<string>('All');
+  const [selectedOption3, setSelectedOption3] = useState<string>('All');
   const [resolvedImageMap, setResolvedImageMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -79,15 +86,26 @@ export default function CustomOrderList() {
     }
   };
 
-  const categories = ['All', ...new Set(allProducts.map((product) => product.category).filter(Boolean))] as string[];
+  const fabrics = ['All', ...new Set(allProducts.map(p => p.fabric).filter(Boolean))] as string[];
+
+  const categories = [
+    'All',
+    ...new Set(
+      allProducts
+        .filter(p => selectedFabric === 'All' || p.fabric === selectedFabric)
+        .map(p => p.category)
+        .filter(Boolean)
+    ),
+  ] as string[];
 
   const subCategories = [
     'All',
     ...new Set(
       allProducts
-        .filter((product) => selectedCategory === 'All' || product.category === selectedCategory)
-        .map((product) => product.sub_category)
-        .filter((subCategory): subCategory is string => Boolean(subCategory))
+        .filter(p => selectedFabric === 'All' || p.fabric === selectedFabric)
+        .filter(p => selectedCategory === 'All' || p.category === selectedCategory)
+        .map(p => p.sub_category)
+        .filter(Boolean)
     ),
   ] as string[];
 
@@ -95,30 +113,81 @@ export default function CustomOrderList() {
     'All',
     ...new Set(
       allProducts
-        .filter((product) => selectedCategory === 'All' || product.category === selectedCategory)
-        .filter((product) => selectedSubCategory === 'All' || product.sub_category === selectedSubCategory)
-        .map((product) => product.variety)
-        .filter((variety): variety is string => Boolean(variety))
+        .filter(p => selectedFabric === 'All' || p.fabric === selectedFabric)
+        .filter(p => selectedCategory === 'All' || p.category === selectedCategory)
+        .filter(p => selectedSubCategory === 'All' || p.sub_category === selectedSubCategory)
+        .map(p => p.variety)
+        .filter(Boolean)
     ),
   ] as string[];
 
-  const fabrics = [
+  const designs = [
     'All',
     ...new Set(
       allProducts
-        .filter((product) => selectedCategory === 'All' || product.category === selectedCategory)
-        .filter((product) => selectedSubCategory === 'All' || product.sub_category === selectedSubCategory)
-        .filter((product) => selectedVariety === 'All' || product.variety === selectedVariety)
-        .map((product) => product.fabric)
-        .filter((fabric): fabric is string => Boolean(fabric))
+        .filter(p => selectedFabric === 'All' || p.fabric === selectedFabric)
+        .filter(p => selectedCategory === 'All' || p.category === selectedCategory)
+        .filter(p => selectedSubCategory === 'All' || p.sub_category === selectedSubCategory)
+        .filter(p => selectedVariety === 'All' || p.variety === selectedVariety)
+        .map(p => p.design)
+        .filter(Boolean)
+    ),
+  ] as string[];
+
+  const option1List = [
+    'All',
+    ...new Set(
+      allProducts
+        .filter(p => selectedFabric === 'All' || p.fabric === selectedFabric)
+        .filter(p => selectedCategory === 'All' || p.category === selectedCategory)
+        .filter(p => selectedSubCategory === 'All' || p.sub_category === selectedSubCategory)
+        .filter(p => selectedVariety === 'All' || p.variety === selectedVariety)
+        .filter(p => selectedDesign === 'All' || p.design === selectedDesign)
+        .map(p => p.option1)
+        .filter(Boolean)
+    ),
+  ] as string[];
+
+  const option2List = [
+    'All',
+    ...new Set(
+      allProducts
+        .filter(p => selectedFabric === 'All' || p.fabric === selectedFabric)
+        .filter(p => selectedCategory === 'All' || p.category === selectedCategory)
+        .filter(p => selectedSubCategory === 'All' || p.sub_category === selectedSubCategory)
+        .filter(p => selectedVariety === 'All' || p.variety === selectedVariety)
+        .filter(p => selectedDesign === 'All' || p.design === selectedDesign)
+        .filter(p => selectedOption1 === 'All' || p.option1 === selectedOption1)
+        .map(p => p.option2)
+        .filter(Boolean)
+    ),
+  ] as string[];
+
+  const option3List = [
+    'All',
+    ...new Set(
+      allProducts
+        .filter(p => selectedFabric === 'All' || p.fabric === selectedFabric)
+        .filter(p => selectedCategory === 'All' || p.category === selectedCategory)
+        .filter(p => selectedSubCategory === 'All' || p.sub_category === selectedSubCategory)
+        .filter(p => selectedVariety === 'All' || p.variety === selectedVariety)
+        .filter(p => selectedDesign === 'All' || p.design === selectedDesign)
+        .filter(p => selectedOption1 === 'All' || p.option1 === selectedOption1)
+        .filter(p => selectedOption2 === 'All' || p.option2 === selectedOption2)
+        .map(p => p.option3)
+        .filter(Boolean)
     ),
   ] as string[];
 
   const filteredProducts = allProducts.filter((product) => {
+    if (selectedFabric !== 'All' && product.fabric !== selectedFabric) return false;
     if (selectedCategory !== 'All' && product.category !== selectedCategory) return false;
     if (selectedSubCategory !== 'All' && product.sub_category !== selectedSubCategory) return false;
     if (selectedVariety !== 'All' && product.variety !== selectedVariety) return false;
-    if (selectedFabric !== 'All' && product.fabric !== selectedFabric) return false;
+    if (selectedDesign !== 'All' && product.design !== selectedDesign) return false;
+    if (selectedOption1 !== 'All' && product.option1 !== selectedOption1) return false;
+    if (selectedOption2 !== 'All' && product.option2 !== selectedOption2) return false;
+    if (selectedOption3 !== 'All' && product.option3 !== selectedOption3) return false;
     return true;
   });
 
@@ -133,36 +202,80 @@ export default function CustomOrderList() {
   return (
     <div className="container mx-auto px-4 py-8 animate-fade-in">
       <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-semibold mb-2">Custom Products</h1>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-3xl md:text-4xl font-semibold">Custom Products</h1>
+          <a
+            href="https://wa.me/919942322743"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
+          >
+            Book an Appointment
+          </a>
+        </div>
         <p className="text-muted-foreground">Bespoke and customizable products tailored to your specifications</p>
       </div>
 
-      {/* Category Filters */}
+      {/* Filters */}
       <div className="mb-8 space-y-4">
         <div className="transition-all duration-300 animate-fade-in">
-          <p className="text-sm font-medium mb-2">Categories</p>
+          <p className="text-sm font-medium mb-2">Fabrics</p>
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {categories.map((category) => (
+            {fabrics.map((fabric) => (
               <button
-                key={category}
+                key={fabric}
                 type="button"
                 onClick={() => {
-                  setSelectedCategory(category);
+                  setSelectedFabric(fabric);
+                  setSelectedCategory('All');
                   setSelectedSubCategory('All');
                   setSelectedVariety('All');
-                  setSelectedFabric('All');
+                  setSelectedDesign('All');
+                  setSelectedOption1('All');
+                  setSelectedOption2('All');
+                  setSelectedOption3('All');
                 }}
                 className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
-                  selectedCategory === category
+                  selectedFabric === fabric
                     ? 'bg-black text-white border-black scale-105 shadow-md'
                     : 'bg-white text-black border hover:scale-105 hover:shadow-sm'
                 }`}
               >
-                {category}
+                {fabric}
               </button>
             ))}
           </div>
         </div>
+
+        {selectedFabric !== 'All' && categories.length > 1 && (
+          <div className="transition-all duration-300 animate-fade-in">
+            <p className="text-sm font-medium mb-2">Categories</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCategory(category);
+                    setSelectedSubCategory('All');
+                    setSelectedVariety('All');
+                    setSelectedDesign('All');
+                    setSelectedOption1('All');
+                    setSelectedOption2('All');
+                    setSelectedOption3('All');
+                  }}
+                  className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
+                    selectedCategory === category
+                      ? 'bg-black text-white border-black scale-105 shadow-md'
+                      : 'bg-white text-black border hover:scale-105 hover:shadow-sm'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {selectedCategory !== 'All' && subCategories.length > 1 && (
           <div className="transition-all duration-300 animate-fade-in">
@@ -175,7 +288,10 @@ export default function CustomOrderList() {
                   onClick={() => {
                     setSelectedSubCategory(subCategory);
                     setSelectedVariety('All');
-                    setSelectedFabric('All');
+                    setSelectedDesign('All');
+                    setSelectedOption1('All');
+                    setSelectedOption2('All');
+                    setSelectedOption3('All');
                   }}
                   className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
                     selectedSubCategory === subCategory
@@ -200,7 +316,10 @@ export default function CustomOrderList() {
                   type="button"
                   onClick={() => {
                     setSelectedVariety(variety);
-                    setSelectedFabric('All');
+                    setSelectedDesign('All');
+                    setSelectedOption1('All');
+                    setSelectedOption2('All');
+                    setSelectedOption3('All');
                   }}
                   className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
                     selectedVariety === variety
@@ -215,22 +334,100 @@ export default function CustomOrderList() {
           </div>
         )}
 
-        {selectedVariety !== 'All' && fabrics.length > 1 && (
+        {selectedVariety !== 'All' && designs.length > 1 && (
           <div className="transition-all duration-300 animate-fade-in">
-            <p className="text-sm font-medium mb-2">Fabrics</p>
+            <p className="text-sm font-medium mb-2">Design</p>
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {fabrics.map((fabric) => (
+              {designs.map((design) => (
                 <button
-                  key={fabric}
+                  key={design}
                   type="button"
-                  onClick={() => setSelectedFabric(fabric)}
+                  onClick={() => {
+                    setSelectedDesign(design);
+                    setSelectedOption1('All');
+                    setSelectedOption2('All');
+                    setSelectedOption3('All');
+                  }}
                   className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
-                    selectedFabric === fabric
+                    selectedDesign === design
                       ? 'bg-black text-white border-black scale-105 shadow-md'
                       : 'bg-white text-black border hover:scale-105 hover:shadow-sm'
                   }`}
                 >
-                  {fabric}
+                  {design}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selectedDesign !== 'All' && option1List.length > 1 && (
+          <div className="transition-all duration-300 animate-fade-in">
+            <p className="text-sm font-medium mb-2">Option 1</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {option1List.map((option1) => (
+                <button
+                  key={option1}
+                  type="button"
+                  onClick={() => {
+                    setSelectedOption1(option1);
+                    setSelectedOption2('All');
+                    setSelectedOption3('All');
+                  }}
+                  className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
+                    selectedOption1 === option1
+                      ? 'bg-black text-white border-black scale-105 shadow-md'
+                      : 'bg-white text-black border hover:scale-105 hover:shadow-sm'
+                  }`}
+                >
+                  {option1}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selectedOption1 !== 'All' && option2List.length > 1 && (
+          <div className="transition-all duration-300 animate-fade-in">
+            <p className="text-sm font-medium mb-2">Option 2</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {option2List.map((option2) => (
+                <button
+                  key={option2}
+                  type="button"
+                  onClick={() => {
+                    setSelectedOption2(option2);
+                    setSelectedOption3('All');
+                  }}
+                  className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
+                    selectedOption2 === option2
+                      ? 'bg-black text-white border-black scale-105 shadow-md'
+                      : 'bg-white text-black border hover:scale-105 hover:shadow-sm'
+                  }`}
+                >
+                  {option2}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {selectedOption2 !== 'All' && option3List.length > 1 && (
+          <div className="transition-all duration-300 animate-fade-in">
+            <p className="text-sm font-medium mb-2">Option 3</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {option3List.map((option3) => (
+                <button
+                  key={option3}
+                  type="button"
+                  onClick={() => setSelectedOption3(option3)}
+                  className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
+                    selectedOption3 === option3
+                      ? 'bg-black text-white border-black scale-105 shadow-md'
+                      : 'bg-white text-black border hover:scale-105 hover:shadow-sm'
+                  }`}
+                >
+                  {option3}
                 </button>
               ))}
             </div>

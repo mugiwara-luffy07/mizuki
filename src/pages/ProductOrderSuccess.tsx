@@ -9,6 +9,30 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/supabase-client';
+import { getImageUrl } from '@/lib/imageUtils';
+
+interface CustomProduct {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  base_price: number;
+  category: string;
+  fabric?: string;
+  sub_category?: string;
+  variety?: string;
+  design?: string;
+  option1?: string;
+  option2?: string;
+  option3?: string;
+  colors?: string[];
+  images?: string[];
+  image_url?: string;
+  measurement_keys: string[];
+  measurement_video_url?: string;
+  is_active: boolean;
+}
 
 interface OrderState {
   orderId: string;
@@ -27,6 +51,31 @@ export default function ProductOrderSuccess() {
   const { tenant } = useParams<{ tenant: string }>();
   const location = useLocation();
   const [orderData, setOrderData] = useState<OrderState | null>(null);
+  const [recommendedProducts, setRecommendedProducts] = useState<CustomProduct[]>([]);
+  const [resolvedImageMap, setResolvedImageMap] = useState<Record<string, string>>({});
+
+  console.log("ProductOrderSuccess component mounted, tenant:", tenant);
+
+  useEffect(() => {
+    console.log("loadRecommendedProducts useEffect triggered");
+    const loadRecommendedProducts = async () => {
+      console.log("loadRecommendedProducts function called");
+      const { data, error } = await supabase
+        .from('custom_products')
+        .select('*')
+        .eq('is_active', true)
+        .eq('category', 'Blouse')
+        .limit(4);
+
+      console.log("Recommended products fetched:", data);
+
+      if (!error && data) {
+        setRecommendedProducts(data);
+      }
+    };
+
+    loadRecommendedProducts();
+  }, []);
 
   useEffect(() => {
     // Get order data from navigation state
@@ -35,6 +84,30 @@ export default function ProductOrderSuccess() {
       setOrderData(state);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    console.log("Recommended state updated:", recommendedProducts);
+  }, [recommendedProducts]);
+
+  // Resolve product images (supabase:// → signed URLs)
+  useEffect(() => {
+    const resolveImages = async () => {
+      for (const product of recommendedProducts) {
+        const primaryImageRef = (product.images && product.images.length > 0)
+          ? product.images[0]
+          : product.image_url;
+
+        if (!primaryImageRef || resolvedImageMap[product.id]) continue;
+
+        const resolved = await getImageUrl(primaryImageRef);
+        if (resolved) {
+          setResolvedImageMap(prev => ({ ...prev, [product.id]: resolved }));
+        }
+      }
+    };
+
+    resolveImages();
+  }, [recommendedProducts, resolvedImageMap]);
 
   if (!orderData) {
     return (
@@ -190,6 +263,79 @@ export default function ProductOrderSuccess() {
           </div>
         </div>
       </div>
+
+      {/* Recommendation Section */}
+      {recommendedProducts.length > 0 && (
+        <div className="mt-16 mb-12">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl md:text-3xl font-semibold mb-2">
+              Complete Your Look
+            </h2>
+            <p className="text-muted-foreground">
+              Custom Blouse for Your Saree
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {recommendedProducts.map((product) => (
+              <Link
+                key={product.id}
+                to={`/${tenant}/custom-order/${product.slug}`}
+                className="group"
+              >
+                <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
+                  {/* Image */}
+                  <div className="aspect-[3/4] bg-muted overflow-hidden relative">
+                    {(() => {
+                      const primaryImageRef = (product.images && product.images.length > 0)
+                        ? product.images[0]
+                        : product.image_url;
+
+                      if (!primaryImageRef) {
+                        return (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                            No Image
+                          </div>
+                        );
+                      }
+
+                      const displayUrl = resolvedImageMap[product.id] || (!primaryImageRef.startsWith('supabase://') ? primaryImageRef : '');
+                      return displayUrl ? (
+                        <img
+                          src={displayUrl}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+                          Loading...
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Product Info */}
+                  <div className="p-4 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
+                        {product.name}
+                      </h3>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-border">
+                      <p className="text-lg font-semibold text-primary">
+                        ₹{product.base_price.toLocaleString()}
+                      </p>
+                      <Button className="w-full mt-2" size="sm">
+                        Customize Now
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="text-center space-y-4 max-w-md mx-auto">
