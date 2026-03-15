@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Trash2, ShoppingBag, ArrowRight, Plus, Minus } from 'lucide-react';
-import { useCartStore } from '@/store/cartStore';
+import { getCartItemMatchKey, useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -62,7 +62,7 @@ export default function Cart() {
         <div className="lg:col-span-2 space-y-4">
           {items.map((item) => (
             <div
-              key={item.product_id}
+              key={getCartItemMatchKey(item)}
               className="flex gap-4 p-4 border border-border rounded-lg bg-card"
             >
               <Link to={`/${tenant}/product/${item.slug}`}>
@@ -91,13 +91,22 @@ export default function Cart() {
                   ₹{item.price.toLocaleString()}
                 </p>
 
+                {item.custom_data?.blouse_stitching && (
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Blouse Stitching:{' '}
+                    <span className="font-medium text-foreground capitalize">
+                      {item.custom_data.blouse_stitching}
+                    </span>
+                  </p>
+                )}
+
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2 border border-border rounded-md">
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => updateQuantity(item.product_id, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.product_id, item.quantity - 1, item.custom_data?.blouse_stitching)}
                     >
                       <Minus className="w-4 h-4" />
                     </Button>
@@ -106,7 +115,7 @@ export default function Cart() {
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => updateQuantity(item.product_id, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.product_id, item.quantity + 1, item.custom_data?.blouse_stitching)}
                     >
                       <Plus className="w-4 h-4" />
                     </Button>
@@ -116,7 +125,7 @@ export default function Cart() {
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      removeItem(item.product_id);
+                      removeItem(item.product_id, item.custom_data?.blouse_stitching);
                       toast.success('Item removed from bag');
                     }}
                     className="text-destructive hover:text-destructive"

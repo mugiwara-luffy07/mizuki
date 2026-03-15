@@ -14,12 +14,20 @@ export interface CartItem {
   custom_data?: Record<string, any>; // For custom products: measurements, etc.
 }
 
+const getBlouseStitchingVariant = (item: CartItem) => {
+  return item.custom_data?.blouse_stitching || 'standard';
+};
+
+export const getCartItemMatchKey = (item: CartItem) => {
+  return `${item.product_id}::${getBlouseStitchingVariant(item)}`;
+};
+
 interface CartState {
   items: CartItem[];
   isLoading: boolean;
   addItem: (item: CartItem) => void;
-  removeItem: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeItem: (productId: string, blouseStitching?: string) => void;
+  updateQuantity: (productId: string, quantity: number, blouseStitching?: string) => void;
   clearCart: () => void;
   getTotal: () => number;
   getItemCount: () => number;
@@ -37,12 +45,13 @@ export const useCartStore = create<CartState>()(
 
       addItem: (item: CartItem) => {
         const items = get().items;
-        const existingItem = items.find(i => i.product_id === item.product_id);
+        const itemKey = getCartItemMatchKey(item);
+        const existingItem = items.find(i => getCartItemMatchKey(i) === itemKey);
         
         if (existingItem) {
           set({
             items: items.map(i =>
-              i.product_id === item.product_id
+              getCartItemMatchKey(i) === itemKey
                 ? { ...i, quantity: i.quantity + item.quantity }
                 : i
             ),
@@ -52,18 +61,35 @@ export const useCartStore = create<CartState>()(
         }
       },
 
-      removeItem: (productId: string) => {
-        set({ items: get().items.filter(i => i.product_id !== productId) });
+      removeItem: (productId: string, blouseStitching?: string) => {
+        set({
+          items: get().items.filter(i => {
+            const matchesProduct = i.product_id === productId;
+            if (!matchesProduct) {
+              return true;
+            }
+
+            if (blouseStitching === undefined) {
+              return false;
+            }
+
+            return getBlouseStitchingVariant(i) !== blouseStitching;
+          }),
+        });
       },
 
-      updateQuantity: (productId: string, quantity: number) => {
+      updateQuantity: (productId: string, quantity: number, blouseStitching?: string) => {
         if (quantity <= 0) {
-          get().removeItem(productId);
+          get().removeItem(productId, blouseStitching);
           return;
         }
+
         set({
           items: get().items.map(i =>
-            i.product_id === productId ? { ...i, quantity } : i
+            i.product_id === productId &&
+            (blouseStitching === undefined || getBlouseStitchingVariant(i) === blouseStitching)
+              ? { ...i, quantity }
+              : i
           ),
         });
       },

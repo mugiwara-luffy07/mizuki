@@ -28,7 +28,9 @@ interface EcommerceOrder {
     price: number;
     quantity: number;
     custom_data?: {
+      blouse_stitching?: 'with' | 'without';
       measurements?: Record<string, number | string>;
+      stitching_notes?: string;
       is_custom?: boolean;
       category?: string;
       [key: string]: any;
@@ -672,6 +674,14 @@ export default function AdminEcommerceOrders() {
                         <div>
                           <p className="font-medium">{item.name}</p>
                           <p className="text-muted-foreground text-sm">Qty: {item.quantity}</p>
+                          {item.custom_data?.blouse_stitching && (
+                            <p className="text-muted-foreground text-sm mt-1">
+                              Blouse Stitching:{' '}
+                              <span className="font-medium text-foreground capitalize">
+                                {item.custom_data.blouse_stitching}
+                              </span>
+                            </p>
+                          )}
                         </div>
                         <div className="text-right">
                           <p className="font-medium">₹{item.price.toLocaleString()}</p>
@@ -680,27 +690,45 @@ export default function AdminEcommerceOrders() {
                       </div>
                       
                       {/* Custom Measurements Section */}
-                      {item.custom_data?.measurements && (
+                      {(item.custom_data?.measurements || item.custom_data?.blouse_stitching || item.custom_data?.stitching_notes) && (
                         <div className="bg-muted/30 rounded-lg p-3 mt-2 space-y-2">
-                          <h4 className="text-sm font-semibold text-orange-700 dark:text-orange-400 flex items-center gap-2">
-                            <span>📏</span>
-                            Custom Measurements
-                          </h4>
-                          <div className="grid grid-cols-2 gap-2 text-sm">
-                            {Object.entries(item.custom_data.measurements).map(([label, value]) => (
-                              <div key={label} className="space-y-1">
-                                <p className="text-muted-foreground capitalize">{label}</p>
-                                <p className="font-medium">
-                                  {value}
-                                  {item.custom_data?.category && (
-                                    <span className="text-muted-foreground text-xs ml-1">
-                                      {item.custom_data.category === 'custom_tailoring' ? 'inches' : item.custom_data.category === 'saree_length' ? 'meters' : ''}
-                                    </span>
-                                  )}
-                                </p>
+                          {item.custom_data?.blouse_stitching && (
+                            <div className="text-sm">
+                              <p className="text-muted-foreground">Blouse Stitching</p>
+                              <p className="font-medium capitalize">{item.custom_data.blouse_stitching}</p>
+                            </div>
+                          )}
+
+                          {item.custom_data?.stitching_notes && (
+                            <div className="text-sm">
+                              <p className="text-muted-foreground">Stitching Instructions</p>
+                              <p className="font-medium whitespace-pre-line">{item.custom_data.stitching_notes}</p>
+                            </div>
+                          )}
+
+                          {item.custom_data?.measurements && (
+                            <>
+                              <h4 className="text-sm font-semibold text-orange-700 dark:text-orange-400 flex items-center gap-2">
+                                <span>📏</span>
+                                Measurements
+                              </h4>
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                {Object.entries(item.custom_data.measurements).map(([label, value]) => (
+                                  <div key={label} className="space-y-1">
+                                    <p className="text-muted-foreground capitalize">{label.replace(/_/g, ' ')}</p>
+                                    <p className="font-medium">
+                                      {value}
+                                      {item.custom_data?.category && (
+                                        <span className="text-muted-foreground text-xs ml-1">
+                                          {item.custom_data.category === 'custom_tailoring' ? 'inches' : item.custom_data.category === 'saree_length' ? 'meters' : ''}
+                                        </span>
+                                      )}
+                                    </p>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                          </div>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
