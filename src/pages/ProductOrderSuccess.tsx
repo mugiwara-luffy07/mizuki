@@ -18,10 +18,10 @@ interface CustomProduct {
   slug: string;
   description?: string;
   base_price: number;
-  category: string;
+  garment: string;
   fabric?: string;
+  design_selection?: string;
   sub_category?: string;
-  variety?: string;
   design?: string;
   option1?: string;
   option2?: string;
@@ -64,7 +64,7 @@ export default function ProductOrderSuccess() {
         .from('custom_products')
         .select('*')
         .eq('is_active', true)
-        .eq('category', 'Blouse')
+        .eq('garment', 'Blouse')
         .limit(4);
 
       console.log("Recommended products fetched:", data);

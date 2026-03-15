@@ -107,7 +107,7 @@ export default function About() {
           <p className="text-muted-foreground mb-8 max-w-md mx-auto">
             Start your custom order today and experience the difference of bespoke tailoring.
           </p>
-          <Link to={`/${tenant}/order`} className="btn-tenant inline-flex">
+          <Link to={`/${tenant}/custom-order`} className="btn-tenant inline-flex">
             <Scissors className="w-4 h-4 mr-2" />
             Start Custom Order
           </Link>

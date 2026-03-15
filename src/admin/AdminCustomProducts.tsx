@@ -17,10 +17,10 @@ interface CustomProduct {
   slug: string;
   description?: string;
   base_price: number;
-  category: string;
+  garment: string;
   fabric?: string;
+  design_selection?: string;
   sub_category?: string;
-  variety?: string;
   design?: string;
   option1?: string;
   option2?: string;
@@ -52,10 +52,10 @@ export default function AdminCustomProducts() {
   const [editingProduct, setEditingProduct] = useState<CustomProduct | null>(null);
   const [formData, setFormData] = useState<Partial<CustomProduct>>({
     name: '',
-    category: '',
+    garment: '',
     fabric: '',
+    design_selection: '',
     sub_category: '',
-    variety: '',
     design: '',
     option1: '',
     option2: '',
@@ -178,10 +178,10 @@ export default function AdminCustomProducts() {
       setEditingProduct(product);
       setFormData({
         name: product.name || '',
-        category: product.category || '',
+        garment: product.garment || '',
         fabric: product.fabric || '',
+        design_selection: product.design_selection || '',
         sub_category: product.sub_category || '',
-        variety: product.variety || '',
         design: product.design || '',
         option1: product.option1 || '',
         option2: product.option2 || '',
@@ -201,10 +201,10 @@ export default function AdminCustomProducts() {
       setEditingProduct(null);
       setFormData({
         name: '',
-        category: '',
+        garment: '',
         fabric: '',
+        design_selection: '',
         sub_category: '',
-        variety: '',
         design: '',
         option1: '',
         option2: '',
@@ -235,7 +235,7 @@ export default function AdminCustomProducts() {
   };
 
   const validateForm = () => {
-    const required = ['name', 'category', 'base_price'];
+    const required = ['name', 'garment', 'base_price'];
     for (const field of required) {
       if (!formData[field as keyof CustomProduct] || (typeof formData[field as keyof CustomProduct] === 'number' && formData[field as keyof CustomProduct] === 0 && field === 'base_price')) {
         toast.error(`Please fill in ${field.replace(/_/g, ' ')}`);
@@ -383,10 +383,10 @@ export default function AdminCustomProducts() {
       const payload = {
         name: String(formData.name || '').trim(),
         slug: slug,
-        category: String(formData.category || '').trim(),
+        garment: String(formData.garment || '').trim(),
         fabric: String(formData.fabric || '').trim(),
+        design_selection: String(formData.design_selection || '').trim(),
         sub_category: String(formData.sub_category || '').trim(),
-        variety: String(formData.variety || '').trim(),
         design: String(formData.design || '').trim(),
         option1: String(formData.option1 || '').trim(),
         option2: String(formData.option2 || '').trim(),
@@ -560,7 +560,7 @@ export default function AdminCustomProducts() {
                     <td className="px-4 py-3">
                       <div>
                         <p className="font-medium">{product.name}</p>
-                        <p className="text-sm text-muted-foreground">{product.category}</p>
+                        <p className="text-sm text-muted-foreground">{product.garment}</p>
                       </div>
                     </td>
                     <td className="px-4 py-3 font-medium">₹{product.base_price.toLocaleString()}</td>
@@ -634,11 +634,11 @@ export default function AdminCustomProducts() {
                 />
               </div>
               <div>
-                <Label htmlFor="category">Category *</Label>
+                <Label htmlFor="garment">Garment *</Label>
                 <Input
-                  id="category"
-                  value={formData.category || ''}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  id="garment"
+                  value={formData.garment || ''}
+                  onChange={(e) => setFormData({ ...formData, garment: e.target.value })}
                   placeholder="e.g., Custom Saree, Bespoke Blouse"
                 />
               </div>
@@ -646,20 +646,20 @@ export default function AdminCustomProducts() {
 
             <div className="grid grid-cols-3 gap-4">
               <div>
+                <Label htmlFor="design_selection">Design Selection</Label>
+                <Input
+                  id="design_selection"
+                  value={formData.design_selection || ''}
+                  onChange={(e) => setFormData({ ...formData, design_selection: e.target.value })}
+                  placeholder="e.g., Bridal, Party Wear"
+                />
+              </div>
+              <div>
                 <Label htmlFor="sub_category">Sub Category</Label>
                 <Input
                   id="sub_category"
                   value={formData.sub_category || ''}
                   onChange={(e) => setFormData({ ...formData, sub_category: e.target.value })}
-                  placeholder="e.g., Bridal, Party Wear"
-                />
-              </div>
-              <div>
-                <Label htmlFor="variety">Variety</Label>
-                <Input
-                  id="variety"
-                  value={formData.variety || ''}
-                  onChange={(e) => setFormData({ ...formData, variety: e.target.value })}
                   placeholder="e.g., Handloom"
                 />
               </div>

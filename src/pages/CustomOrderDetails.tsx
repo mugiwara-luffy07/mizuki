@@ -16,10 +16,10 @@ interface CustomProduct {
   slug: string;
   description?: string;
   base_price: number;
-  category: string;
+  garment: string;
   fabric?: string;
+  design_selection?: string;
   sub_category?: string;
-  variety?: string;
   design?: string;
   colors?: string[];
   images?: string[];
@@ -220,9 +220,9 @@ export default function CustomOrderDetails() {
           measurements: enteredMeasurements,
           selected_color: selectedColor || null,
           is_custom: true,
-          category: product!.category,
-          sub_category: product!.sub_category || null,
-          variety: product!.variety || null,
+          category: product!.garment,
+          sub_category: product!.design_selection || null,
+          variety: product!.sub_category || null,
           design: product!.design || null,
         },
       };
@@ -374,7 +374,7 @@ export default function CustomOrderDetails() {
         <div className="flex flex-col justify-between">
           {/* Header */}
           <div>
-            <p className="text-sm text-muted-foreground mb-2">{product.category}</p>
+            <p className="text-sm text-muted-foreground mb-2">{product.garment}</p>
             <h1 className="text-3xl md:text-4xl font-semibold mb-4">{product.name}</h1>
 
             {/* Price */}
@@ -397,19 +397,19 @@ export default function CustomOrderDetails() {
             <div className="mb-6 bg-gray-50 rounded-lg p-4 text-sm">
               <div className="space-y-2">
                 <div className="flex justify-between gap-3">
-                  <span className="text-muted-foreground">Category</span>
-                  <span className="font-medium text-right">{product.category}</span>
+                  <span className="text-muted-foreground">Garment</span>
+                  <span className="font-medium text-right">{product.garment}</span>
                 </div>
+                {product.design_selection && (
+                  <div className="flex justify-between gap-3">
+                    <span className="text-muted-foreground">Design Selection</span>
+                    <span className="font-medium text-right">{product.design_selection}</span>
+                  </div>
+                )}
                 {product.sub_category && (
                   <div className="flex justify-between gap-3">
                     <span className="text-muted-foreground">Sub Category</span>
                     <span className="font-medium text-right">{product.sub_category}</span>
-                  </div>
-                )}
-                {product.variety && (
-                  <div className="flex justify-between gap-3">
-                    <span className="text-muted-foreground">Variety</span>
-                    <span className="font-medium text-right">{product.variety}</span>
                   </div>
                 )}
                 {product.design && (
@@ -438,7 +438,7 @@ export default function CustomOrderDetails() {
                     rel="noopener noreferrer"
                     className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
                   >
-                    Book Appointment for Measurements Enquiry
+                    Book an appoitment for more ideas
                   </a>
                 </div>
                 <div className="space-y-4 p-4 bg-secondary/30 rounded-lg">
@@ -506,21 +506,21 @@ export default function CustomOrderDetails() {
                   </div>
 
                   <div className="flex justify-between items-start pb-3 border-b border-border">
-                    <span className="text-sm text-muted-foreground">Category</span>
-                    <span className="font-medium text-right">{product.category}</span>
+                    <span className="text-sm text-muted-foreground">Garment</span>
+                    <span className="font-medium text-right">{product.garment}</span>
                   </div>
+
+                  {product.design_selection && (
+                    <div className="flex justify-between items-start pb-3 border-b border-border">
+                      <span className="text-sm text-muted-foreground">Design Selection</span>
+                      <span className="font-medium text-right">{product.design_selection}</span>
+                    </div>
+                  )}
 
                   {product.sub_category && (
                     <div className="flex justify-between items-start pb-3 border-b border-border">
                       <span className="text-sm text-muted-foreground">Sub Category</span>
                       <span className="font-medium text-right">{product.sub_category}</span>
-                    </div>
-                  )}
-
-                  {product.variety && (
-                    <div className="flex justify-between items-start pb-3 border-b border-border">
-                      <span className="text-sm text-muted-foreground">Variety</span>
-                      <span className="font-medium text-right">{product.variety}</span>
                     </div>
                   )}
 

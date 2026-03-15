@@ -19,7 +19,7 @@ export default function Contact() {
             rel="noopener noreferrer"
             className="inline-block px-6 py-3 bg-green-600 text-white text-lg rounded-md hover:bg-green-700 transition-colors"
           >
-            Book an Appointment
+            Book an appoitment for more ideas
           </a>
         </div>
 

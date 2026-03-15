@@ -11,10 +11,10 @@ interface CustomProduct {
   slug: string;
   description?: string;
   base_price: number;
-  category: string;
+  garment: string;
   fabric?: string;
+  design_selection?: string;
   sub_category?: string;
-  variety?: string;
   design?: string;
   option1?: string;
   option2?: string;
@@ -31,9 +31,9 @@ export default function CustomOrderList() {
   const { tenant } = useParams<{ tenant: string }>();
   const [allProducts, setAllProducts] = useState<CustomProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedGarment, setSelectedGarment] = useState<string>('All');
+  const [selectedDesignSelection, setSelectedDesignSelection] = useState<string>('All');
   const [selectedSubCategory, setSelectedSubCategory] = useState<string>('All');
-  const [selectedVariety, setSelectedVariety] = useState<string>('All');
   const [selectedFabric, setSelectedFabric] = useState<string>('All');
   const [selectedDesign, setSelectedDesign] = useState<string>('All');
   const [selectedOption1, setSelectedOption1] = useState<string>('All');
@@ -86,14 +86,17 @@ export default function CustomOrderList() {
     }
   };
 
-  const fabrics = ['All', ...new Set(allProducts.map(p => p.fabric).filter(Boolean))] as string[];
+  const garments = [
+    'All',
+    ...new Set(allProducts.map(p => p.garment).filter(Boolean)),
+  ] as string[];
 
-  const categories = [
+  const designSelections = [
     'All',
     ...new Set(
       allProducts
-        .filter(p => selectedFabric === 'All' || p.fabric === selectedFabric)
-        .map(p => p.category)
+        .filter(p => selectedGarment === 'All' || p.garment === selectedGarment)
+        .map(p => p.design_selection)
         .filter(Boolean)
     ),
   ] as string[];
@@ -102,21 +105,9 @@ export default function CustomOrderList() {
     'All',
     ...new Set(
       allProducts
-        .filter(p => selectedFabric === 'All' || p.fabric === selectedFabric)
-        .filter(p => selectedCategory === 'All' || p.category === selectedCategory)
+        .filter(p => selectedGarment === 'All' || p.garment === selectedGarment)
+        .filter(p => selectedDesignSelection === 'All' || p.design_selection === selectedDesignSelection)
         .map(p => p.sub_category)
-        .filter(Boolean)
-    ),
-  ] as string[];
-
-  const varieties = [
-    'All',
-    ...new Set(
-      allProducts
-        .filter(p => selectedFabric === 'All' || p.fabric === selectedFabric)
-        .filter(p => selectedCategory === 'All' || p.category === selectedCategory)
-        .filter(p => selectedSubCategory === 'All' || p.sub_category === selectedSubCategory)
-        .map(p => p.variety)
         .filter(Boolean)
     ),
   ] as string[];
@@ -125,10 +116,9 @@ export default function CustomOrderList() {
     'All',
     ...new Set(
       allProducts
-        .filter(p => selectedFabric === 'All' || p.fabric === selectedFabric)
-        .filter(p => selectedCategory === 'All' || p.category === selectedCategory)
+        .filter(p => selectedGarment === 'All' || p.garment === selectedGarment)
+        .filter(p => selectedDesignSelection === 'All' || p.design_selection === selectedDesignSelection)
         .filter(p => selectedSubCategory === 'All' || p.sub_category === selectedSubCategory)
-        .filter(p => selectedVariety === 'All' || p.variety === selectedVariety)
         .map(p => p.design)
         .filter(Boolean)
     ),
@@ -138,10 +128,9 @@ export default function CustomOrderList() {
     'All',
     ...new Set(
       allProducts
-        .filter(p => selectedFabric === 'All' || p.fabric === selectedFabric)
-        .filter(p => selectedCategory === 'All' || p.category === selectedCategory)
+        .filter(p => selectedGarment === 'All' || p.garment === selectedGarment)
+        .filter(p => selectedDesignSelection === 'All' || p.design_selection === selectedDesignSelection)
         .filter(p => selectedSubCategory === 'All' || p.sub_category === selectedSubCategory)
-        .filter(p => selectedVariety === 'All' || p.variety === selectedVariety)
         .filter(p => selectedDesign === 'All' || p.design === selectedDesign)
         .map(p => p.option1)
         .filter(Boolean)
@@ -152,10 +141,9 @@ export default function CustomOrderList() {
     'All',
     ...new Set(
       allProducts
-        .filter(p => selectedFabric === 'All' || p.fabric === selectedFabric)
-        .filter(p => selectedCategory === 'All' || p.category === selectedCategory)
+        .filter(p => selectedGarment === 'All' || p.garment === selectedGarment)
+        .filter(p => selectedDesignSelection === 'All' || p.design_selection === selectedDesignSelection)
         .filter(p => selectedSubCategory === 'All' || p.sub_category === selectedSubCategory)
-        .filter(p => selectedVariety === 'All' || p.variety === selectedVariety)
         .filter(p => selectedDesign === 'All' || p.design === selectedDesign)
         .filter(p => selectedOption1 === 'All' || p.option1 === selectedOption1)
         .map(p => p.option2)
@@ -167,10 +155,9 @@ export default function CustomOrderList() {
     'All',
     ...new Set(
       allProducts
-        .filter(p => selectedFabric === 'All' || p.fabric === selectedFabric)
-        .filter(p => selectedCategory === 'All' || p.category === selectedCategory)
+        .filter(p => selectedGarment === 'All' || p.garment === selectedGarment)
+        .filter(p => selectedDesignSelection === 'All' || p.design_selection === selectedDesignSelection)
         .filter(p => selectedSubCategory === 'All' || p.sub_category === selectedSubCategory)
-        .filter(p => selectedVariety === 'All' || p.variety === selectedVariety)
         .filter(p => selectedDesign === 'All' || p.design === selectedDesign)
         .filter(p => selectedOption1 === 'All' || p.option1 === selectedOption1)
         .filter(p => selectedOption2 === 'All' || p.option2 === selectedOption2)
@@ -179,15 +166,31 @@ export default function CustomOrderList() {
     ),
   ] as string[];
 
+  const fabrics = [
+    'All',
+    ...new Set(
+      allProducts
+        .filter(p => selectedGarment === 'All' || p.garment === selectedGarment)
+        .filter(p => selectedDesignSelection === 'All' || p.design_selection === selectedDesignSelection)
+        .filter(p => selectedSubCategory === 'All' || p.sub_category === selectedSubCategory)
+        .filter(p => selectedDesign === 'All' || p.design === selectedDesign)
+        .filter(p => selectedOption1 === 'All' || p.option1 === selectedOption1)
+        .filter(p => selectedOption2 === 'All' || p.option2 === selectedOption2)
+        .filter(p => selectedOption3 === 'All' || p.option3 === selectedOption3)
+        .map(p => p.fabric)
+        .filter(Boolean)
+    ),
+  ] as string[];
+
   const filteredProducts = allProducts.filter((product) => {
-    if (selectedFabric !== 'All' && product.fabric !== selectedFabric) return false;
-    if (selectedCategory !== 'All' && product.category !== selectedCategory) return false;
+    if (selectedGarment !== 'All' && product.garment !== selectedGarment) return false;
+    if (selectedDesignSelection !== 'All' && product.design_selection !== selectedDesignSelection) return false;
     if (selectedSubCategory !== 'All' && product.sub_category !== selectedSubCategory) return false;
-    if (selectedVariety !== 'All' && product.variety !== selectedVariety) return false;
     if (selectedDesign !== 'All' && product.design !== selectedDesign) return false;
     if (selectedOption1 !== 'All' && product.option1 !== selectedOption1) return false;
     if (selectedOption2 !== 'All' && product.option2 !== selectedOption2) return false;
     if (selectedOption3 !== 'All' && product.option3 !== selectedOption3) return false;
+    if (selectedFabric !== 'All' && product.fabric !== selectedFabric) return false;
     return true;
   });
 
@@ -210,7 +213,7 @@ export default function CustomOrderList() {
             rel="noopener noreferrer"
             className="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
           >
-            Book an Appointment
+            Book an appoitment for more ideas
           </a>
         </div>
         <p className="text-muted-foreground">Bespoke and customizable products tailored to your specifications</p>
@@ -219,65 +222,65 @@ export default function CustomOrderList() {
       {/* Filters */}
       <div className="mb-8 space-y-4">
         <div className="transition-all duration-300 animate-fade-in">
-          <p className="text-sm font-medium mb-2">Fabrics</p>
+          <p className="text-sm font-medium mb-2">Garments</p>
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {fabrics.map((fabric) => (
+            {garments.map((garment) => (
               <button
-                key={fabric}
+                key={garment}
                 type="button"
                 onClick={() => {
-                  setSelectedFabric(fabric);
-                  setSelectedCategory('All');
+                  setSelectedGarment(garment);
+                  setSelectedDesignSelection('All');
                   setSelectedSubCategory('All');
-                  setSelectedVariety('All');
                   setSelectedDesign('All');
                   setSelectedOption1('All');
                   setSelectedOption2('All');
                   setSelectedOption3('All');
+                  setSelectedFabric('All');
                 }}
                 className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
-                  selectedFabric === fabric
+                  selectedGarment === garment
                     ? 'bg-black text-white border-black scale-105 shadow-md'
                     : 'bg-white text-black border hover:scale-105 hover:shadow-sm'
                 }`}
               >
-                {fabric}
+                {garment}
               </button>
             ))}
           </div>
         </div>
 
-        {selectedFabric !== 'All' && categories.length > 1 && (
+        {selectedGarment !== 'All' && designSelections.length > 1 && (
           <div className="transition-all duration-300 animate-fade-in">
-            <p className="text-sm font-medium mb-2">Categories</p>
+            <p className="text-sm font-medium mb-2">Design Selections</p>
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {categories.map((category) => (
+              {designSelections.map((designSelection) => (
                 <button
-                  key={category}
+                  key={designSelection}
                   type="button"
                   onClick={() => {
-                    setSelectedCategory(category);
+                    setSelectedDesignSelection(designSelection);
                     setSelectedSubCategory('All');
-                    setSelectedVariety('All');
                     setSelectedDesign('All');
                     setSelectedOption1('All');
                     setSelectedOption2('All');
                     setSelectedOption3('All');
+                    setSelectedFabric('All');
                   }}
                   className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
-                    selectedCategory === category
+                    selectedDesignSelection === designSelection
                       ? 'bg-black text-white border-black scale-105 shadow-md'
                       : 'bg-white text-black border hover:scale-105 hover:shadow-sm'
                   }`}
                 >
-                  {category}
+                  {designSelection}
                 </button>
               ))}
             </div>
           </div>
         )}
 
-        {selectedCategory !== 'All' && subCategories.length > 1 && (
+        {selectedDesignSelection !== 'All' && subCategories.length > 1 && (
           <div className="transition-all duration-300 animate-fade-in">
             <p className="text-sm font-medium mb-2">Sub Categories</p>
             <div className="flex gap-2 overflow-x-auto pb-1">
@@ -287,11 +290,11 @@ export default function CustomOrderList() {
                   type="button"
                   onClick={() => {
                     setSelectedSubCategory(subCategory);
-                    setSelectedVariety('All');
                     setSelectedDesign('All');
                     setSelectedOption1('All');
                     setSelectedOption2('All');
                     setSelectedOption3('All');
+                    setSelectedFabric('All');
                   }}
                   className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
                     selectedSubCategory === subCategory
@@ -306,35 +309,7 @@ export default function CustomOrderList() {
           </div>
         )}
 
-        {selectedSubCategory !== 'All' && varieties.length > 1 && (
-          <div className="transition-all duration-300 animate-fade-in">
-            <p className="text-sm font-medium mb-2">Varieties</p>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {varieties.map((variety) => (
-                <button
-                  key={variety}
-                  type="button"
-                  onClick={() => {
-                    setSelectedVariety(variety);
-                    setSelectedDesign('All');
-                    setSelectedOption1('All');
-                    setSelectedOption2('All');
-                    setSelectedOption3('All');
-                  }}
-                  className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
-                    selectedVariety === variety
-                      ? 'bg-black text-white border-black scale-105 shadow-md'
-                      : 'bg-white text-black border hover:scale-105 hover:shadow-sm'
-                  }`}
-                >
-                  {variety}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {selectedVariety !== 'All' && designs.length > 1 && (
+        {selectedSubCategory !== 'All' && designs.length > 1 && (
           <div className="transition-all duration-300 animate-fade-in">
             <p className="text-sm font-medium mb-2">Design</p>
             <div className="flex gap-2 overflow-x-auto pb-1">
@@ -347,6 +322,7 @@ export default function CustomOrderList() {
                     setSelectedOption1('All');
                     setSelectedOption2('All');
                     setSelectedOption3('All');
+                    setSelectedFabric('All');
                   }}
                   className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
                     selectedDesign === design
@@ -373,6 +349,7 @@ export default function CustomOrderList() {
                     setSelectedOption1(option1);
                     setSelectedOption2('All');
                     setSelectedOption3('All');
+                    setSelectedFabric('All');
                   }}
                   className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
                     selectedOption1 === option1
@@ -398,6 +375,7 @@ export default function CustomOrderList() {
                   onClick={() => {
                     setSelectedOption2(option2);
                     setSelectedOption3('All');
+                    setSelectedFabric('All');
                   }}
                   className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
                     selectedOption2 === option2
@@ -420,7 +398,10 @@ export default function CustomOrderList() {
                 <button
                   key={option3}
                   type="button"
-                  onClick={() => setSelectedOption3(option3)}
+                  onClick={() => {
+                    setSelectedOption3(option3);
+                    setSelectedFabric('All');
+                  }}
                   className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
                     selectedOption3 === option3
                       ? 'bg-black text-white border-black scale-105 shadow-md'
@@ -433,6 +414,28 @@ export default function CustomOrderList() {
             </div>
           </div>
         )}
+
+        {selectedOption3 !== 'All' && (
+          <div className="transition-all duration-300 animate-fade-in">
+            <p className="text-sm font-medium mb-2">Fabrics</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {fabrics.map((fabric) => (
+                <button
+                  key={fabric}
+                  type="button"
+                  onClick={() => setSelectedFabric(fabric)}
+                  className={`px-4 py-2 rounded-full whitespace-nowrap border transition-all duration-300 ${
+                    selectedFabric === fabric
+                      ? 'bg-black text-white border-black scale-105 shadow-md'
+                      : 'bg-white text-black border hover:scale-105 hover:shadow-sm'
+                  }`}
+                >
+                  {fabric}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Products Grid */}
@@ -440,7 +443,7 @@ export default function CustomOrderList() {
         return filteredProducts.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-muted-foreground text-lg">
-              {selectedCategory === 'All'
+              {selectedGarment === 'All'
                 ? 'No custom products available at the moment.'
                 : 'No products found for selected filters.'}
             </p>
@@ -487,7 +490,7 @@ export default function CustomOrderList() {
                 {/* Product Info */}
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">{product.category}</p>
+                    <p className="text-sm text-muted-foreground mb-1">{product.garment}</p>
                     <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-primary transition-colors">
                       {product.name}
                     </h3>

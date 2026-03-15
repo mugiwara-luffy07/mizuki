@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Navigate, Routes, Route, useParams } from "react-router-dom";
 import { useAuthStore } from "@/store/authStore";
 
 // Main landing (redirects to default tenant)
@@ -70,6 +70,16 @@ function AuthInitializer() {
   return null;
 }
 
+function LegacyOrderRedirect() {
+  const { tenant } = useParams<{ tenant: string }>();
+
+  if (!tenant) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Navigate to={`/${tenant}/custom-order`} replace />;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -105,6 +115,7 @@ const App = () => (
           {/* Auth Routes */}
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/diagnostics" element={<SupabaseDiagnostics />} />
+          <Route path="/:tenant/order" element={<LegacyOrderRedirect />} />
           <Route path="/:tenant/login" element={<Login />} />
           <Route path="/:tenant/signup" element={<SignUp />} />
           <Route path="/login" element={<Login />} />

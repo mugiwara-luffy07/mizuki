@@ -87,7 +87,7 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="px-3 py-1 bg-green-600 text-white text-xs rounded-md hover:bg-green-700 transition-colors"
               >
-                Book an Appointment
+                Book an appoitment for more ideas
               </a>
             </div>
           </div>
@@ -137,7 +137,7 @@ export default function Home() {
             {config.description}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up stagger-3">
-            <Link to={`/${tenant}/order`} className="btn-tenant">
+            <Link to={`/${tenant}/custom-order`} className="btn-tenant">
               <Scissors className="w-4 h-4 mr-2" />
               Start Custom Order
               <ArrowRight className="w-4 h-4 ml-2" />
@@ -284,7 +284,7 @@ export default function Home() {
           </div>
           <div className="text-center mt-10">
             <Link
-              to={`/${tenant}/order`}
+              to={`/${tenant}/custom-order`}
               className="inline-flex items-center gap-2 text-sm font-medium hover:gap-3 transition-all btn-tenant-outline"
             >
               Browse All Designs
@@ -304,7 +304,7 @@ export default function Home() {
             Start your order today and experience the art of bespoke tailoring
           </p>
           <Link
-            to={`/${tenant}/order`}
+            to={`/${tenant}/custom-order`}
             className="inline-flex items-center gap-2 px-6 py-3 bg-tenant-secondary text-tenant-primary rounded-md font-medium hover:opacity-90 transition-opacity"
           >
             <Scissors className="w-4 h-4" />

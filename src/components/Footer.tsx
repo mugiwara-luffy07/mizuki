@@ -26,7 +26,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <Link
-                  to={`/${tenant}/order`}
+                  to={`/${tenant}/custom-order`}
                   className="text-sm opacity-80 hover:opacity-100 transition-opacity"
                 >
                   Custom Order
