@@ -148,6 +148,13 @@ function generateEmailHTML(eventType: string, order: any): string {
         <p style="margin: 0; color: #666666; font-size: 14px; line-height: 1.8;">
           <strong style="color: #1a1a1a;">Next step:</strong> Please complete the payment verification process in your order details.
         </p>
+        <div style="margin-top:16px;">
+          <p style="margin:0; font-weight:600;">🚚 Delivery Information:</p>
+          <p style="margin:4px 0 0 0; color:#555; font-size:14px; line-height:1.5;">
+            Shipping charges will be calculated based on your delivery location and order weight.
+            Our team will connect with you shortly to confirm the details.
+          </p>
+        </div>
       `,
       'View Order Details',
       `${baseURL}/orders`

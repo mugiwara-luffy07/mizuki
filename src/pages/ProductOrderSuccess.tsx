@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useLocation, Link } from 'react-router-dom';
+import { useParams, useLocation, Link, useNavigate } from 'react-router-dom';
 import {
   CheckCircle,
   Package,
@@ -50,6 +50,10 @@ interface OrderState {
 export default function ProductOrderSuccess() {
   const { tenant } = useParams<{ tenant: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
+  const whatsappNumber = '919942322743';
+  const whatsappMessage = "Hi, I just placed a saree order and I'm interested in blouse stitching. Do you have any discounts?";
+  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
   const [orderData, setOrderData] = useState<OrderState | null>(null);
   const [recommendedProducts, setRecommendedProducts] = useState<CustomProduct[]>([]);
   const [resolvedImageMap, setResolvedImageMap] = useState<Record<string, string>>({});
@@ -136,6 +140,27 @@ export default function ProductOrderSuccess() {
         <p className="text-lg text-muted-foreground mb-4">
           Thank you for your order. We've received your payment and will verify it shortly.
         </p>
+      </div>
+
+      <div className="max-w-2xl mx-auto mb-8 border border-border rounded-lg p-6 bg-card">
+        <h2 className="text-xl font-semibold mb-2">Complete Your Look</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          Add blouse stitching for your saree
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            onClick={() => navigate(tenant ? `/${tenant}/custom-order` : '/custom-order')}
+            className="w-full sm:w-auto"
+          >
+            Continue Stitching
+          </Button>
+          <Button
+            onClick={() => window.open(whatsappLink, '_blank')}
+            className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white"
+          >
+            WhatsApp for Stitching Discount
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
@@ -269,7 +294,7 @@ export default function ProductOrderSuccess() {
         <div className="mt-16 mb-12">
           <div className="text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-semibold mb-2">
-              Complete Your Look
+              Recommended Blouses
             </h2>
             <p className="text-muted-foreground">
               Custom Blouse for Your Saree

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ExternalLink, Loader2, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Loader2, Check, ChevronLeft, ChevronRight, Truck } from 'lucide-react';
 import { supabase } from '@/supabase-client';
 import { toast } from 'sonner';
 import { getImageUrl } from '@/lib/imageUtils';
@@ -383,6 +383,10 @@ export default function CustomOrderDetails() {
                 ₹{product.base_price.toLocaleString()}
               </p>
               <p className="text-sm text-muted-foreground mt-1">Base price (customizations may apply)</p>
+              <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                <Truck className="w-3.5 h-3.5" />
+                Courier charges extra (based on location and weight)
+              </p>
             </div>
 
             {/* Description */}

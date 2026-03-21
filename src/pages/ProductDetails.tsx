@@ -1,23 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Heart, ShoppingBag, ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
+import { ArrowLeft, Heart, ShoppingBag, ChevronLeft, ChevronRight, ZoomIn, Truck } from 'lucide-react';
 import { supabase } from '@/supabase-client';
 import { useCartStore } from '@/store/cartStore';
 import { useWishlistStore } from '@/store/wishlistStore';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { getImageUrl } from '@/lib/imageUtils';
-
-const BLOUSE_MEASUREMENT_FIELDS = [
-  { key: 'bust', label: 'Bust' },
-  { key: 'waist', label: 'Waist' },
-  { key: 'hip', label: 'Hip' },
-  { key: 'shoulder', label: 'Shoulder' },
-  { key: 'sleeve_length', label: 'Sleeve Length' },
-  { key: 'armhole', label: 'Armhole' },
-] as const;
 
 type BlouseStitchingOption = 'with' | 'without';
 
@@ -52,8 +42,6 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [resolvedImages, setResolvedImages] = useState<{[key: number]: string}>({});
   const [blouseStitching, setBlouseStitching] = useState<BlouseStitchingOption>('without');
-  const [blouseMeasurements, setBlouseMeasurements] = useState<Record<string, string>>({});
-  const [stitchingNotes, setStitchingNotes] = useState('');
   const { addItem } = useCartStore();
   const { addItem: addToWishlist, removeItem: removeFromWishlist, isInWishlist } = useWishlistStore();
 
@@ -143,44 +131,7 @@ export default function ProductDetails() {
   const currentImage = resolvedImages[currentImageIndex] || allImages[currentImageIndex] || '';
   const isSareeProduct = (product.category || '').toLowerCase().includes('saree');
 
-  const handleMeasurementChange = (key: string, value: string) => {
-    setBlouseMeasurements((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const getBlouseMeasurementPayload = () => {
-    if (blouseStitching !== 'with') {
-      return undefined;
-    }
-
-    const measurements = BLOUSE_MEASUREMENT_FIELDS.reduce<Record<string, string>>((acc, field) => {
-      const value = blouseMeasurements[field.key]?.trim();
-      if (value) {
-        acc[field.key] = value;
-      }
-      return acc;
-    }, {});
-
-    return measurements;
-  };
-
   const handleAddToCart = () => {
-    const measurementPayload = getBlouseMeasurementPayload();
-    const stitchingNotesPayload = stitchingNotes.trim();
-
-    if (isSareeProduct && blouseStitching === 'with') {
-      const missingField = BLOUSE_MEASUREMENT_FIELDS.find(
-        (field) => !measurementPayload?.[field.key]
-      );
-
-      if (missingField) {
-        toast.error(`Please enter ${missingField.label.toLowerCase()}`);
-        return;
-      }
-    }
-
     addItem({
       product_id: product.id,
       name: product.name,
@@ -192,8 +143,6 @@ export default function ProductDetails() {
       custom_data: isSareeProduct
         ? {
             blouse_stitching: blouseStitching,
-            measurements: blouseStitching === 'with' ? measurementPayload : undefined,
-            stitching_notes: blouseStitching === 'with' && stitchingNotesPayload ? stitchingNotesPayload : undefined,
           }
         : undefined,
     });
@@ -317,6 +266,10 @@ export default function ProductDetails() {
           <div>
             <p className="text-3xl font-bold mb-2">₹{product.price.toLocaleString()}</p>
             <p className="text-sm text-muted-foreground">Inclusive of all taxes</p>
+            <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+              <Truck className="w-3.5 h-3.5" />
+              Courier charges extra (based on location and weight)
+            </p>
           </div>
 
           {isSareeProduct && (
@@ -351,44 +304,6 @@ export default function ProductDetails() {
                   <span className="font-medium">With Stitching</span>
                 </label>
               </div>
-
-              {blouseStitching === 'with' && (
-                <div className="space-y-3">
-                  <p className="text-sm font-medium">Measurements</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {BLOUSE_MEASUREMENT_FIELDS.map((field) => (
-                      <div key={field.key} className="space-y-1">
-                        <label htmlFor={field.key} className="text-sm text-muted-foreground">
-                          {field.label}
-                        </label>
-                        <input
-                          id={field.key}
-                          type="number"
-                          min="0"
-                          step="0.1"
-                          value={blouseMeasurements[field.key] || ''}
-                          onChange={(event) => handleMeasurementChange(field.key, event.target.value)}
-                          className="w-full rounded-lg border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                          placeholder={`Enter ${field.label.toLowerCase()}`}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="stitching-notes" className="text-sm font-medium">
-                      Stitching Instructions (Optional)
-                    </label>
-                    <Textarea
-                      id="stitching-notes"
-                      value={stitchingNotes}
-                      onChange={(event) => setStitchingNotes(event.target.value)}
-                      rows={4}
-                      placeholder="Mention any special stitching instructions like neck style, sleeve type, tassels, etc."
-                    />
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
