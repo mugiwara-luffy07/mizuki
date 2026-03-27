@@ -14,7 +14,17 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
           {/* Brand */}
           <div className="md:col-span-2">
-            <h3 className="text-2xl font-semibold mb-4">{config.brandName}</h3>
+            <div className="flex items-center gap-3 mb-4">
+              <img
+                src="/logos/logo.jpeg"
+                alt={`${config.brandName} logo`}
+                className="h-10 w-10 rounded-full object-cover"
+              />
+              <div className="flex flex-col">
+                <h3 className="text-2xl font-semibold">{config.brandName}</h3>
+                <p className="text-xs text-muted-foreground">Unit Of Aadharsh International</p>
+              </div>
+            </div>
             <p className="text-sm opacity-80 max-w-md leading-relaxed">
               {config.description}
             </p>
@@ -50,9 +60,9 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Support & Legal */}
           <div>
-            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider opacity-80">Support</h4>
+            <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider opacity-80">Support & Legal</h4>
             <ul className="space-y-3">
               <li>
                 <a href="#" className="text-sm opacity-80 hover:opacity-100 transition-opacity">
@@ -60,19 +70,36 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm opacity-80 hover:opacity-100 transition-opacity">
-                  How It Works
-                </a>
+                <Link
+                  to={`/${tenant}/privacy-policy`}
+                  className="text-sm opacity-80 hover:opacity-100 transition-opacity"
+                >
+                  Privacy Policy
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-sm opacity-80 hover:opacity-100 transition-opacity">
-                  Pricing Info
-                </a>
+                <Link
+                  to={`/${tenant}/terms-conditions`}
+                  className="text-sm opacity-80 hover:opacity-100 transition-opacity"
+                >
+                  Terms & Conditions
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-sm opacity-80 hover:opacity-100 transition-opacity">
-                  FAQ
-                </a>
+                <Link
+                  to={`/${tenant}/refund-policy`}
+                  className="text-sm opacity-80 hover:opacity-100 transition-opacity"
+                >
+                  Refund Policy
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to={`/${tenant}/disclaimer-policy`}
+                  className="text-sm opacity-80 hover:opacity-100 transition-opacity"
+                >
+                  Disclaimer
+                </Link>
               </li>
             </ul>
           </div>

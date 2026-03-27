@@ -4,81 +4,96 @@ export default function RefundPolicy() {
   return (
     <div className="container mx-auto px-4 py-16 animate-fade-in">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-semibold mb-8">Refund Policy</h1>
+        <h1 className="text-3xl md:text-4xl font-semibold mb-8">Refund & Cancellation Policy</h1>
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Last Updated: {new Date().toLocaleDateString()}</CardTitle>
+            <CardTitle>Mizuki (A Unit of Aadharsh International)</CardTitle>
+            <p className="text-sm text-muted-foreground mt-2">Effective Date: 25-03-2026</p>
           </CardHeader>
-          <CardContent className="prose prose-sm max-w-none">
-            <p className="text-muted-foreground">
-              This Refund Policy outlines our policy regarding returns, refunds, and exchanges.
-            </p>
-          </CardContent>
         </Card>
 
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>1. General Policy</CardTitle>
-            </CardHeader>
-            <CardContent className="prose prose-sm max-w-none">
-              <p className="mb-4">
-                <strong>Returns are generally not available.</strong> We accept returns only for 
-                admin-side issues such as:
-              </p>
-              <ul className="list-disc list-inside space-y-2">
-                <li>Wrong product shipped</li>
-                <li>Defective or damaged products (due to our error)</li>
-                <li>Significant quality issues not matching product description</li>
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>2. Return Process</CardTitle>
-            </CardHeader>
-            <CardContent className="prose prose-sm max-w-none">
-              <p className="mb-4">To request a return:</p>
-              <ol className="list-decimal list-inside space-y-2">
-                <li>Email us at <a href="mailto:enquiry@asfffdf.com" className="text-primary hover:underline">enquiry@asfffdf.com</a> within 7 days of delivery</li>
-                <li>Include your order number and reason for return</li>
-                <li>Provide an unboxing video (mandatory)</li>
-                <li>Wait for approval from our team</li>
-                <li>Return shipping costs are borne by the customer</li>
-              </ol>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>3. Unboxing Video Requirement</CardTitle>
+              <CardTitle>1. Introduction</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <p>
-                An unboxing video is mandatory for all return requests. The video must clearly show:
+                This Refund & Cancellation Policy outlines the terms under which Mizuki, a brand owned and operated by Aadharsh International, processes refunds and cancellations for both readymade and customized clothing.
               </p>
-              <ul className="list-disc list-inside space-y-2 mt-2">
-                <li>The sealed package before opening</li>
-                <li>The complete unboxing process</li>
-                <li>Any defects or issues with the product</li>
-                <li>The product in its received condition</li>
-              </ul>
+              <p className="mt-4">
+                By placing an order with Mizuki, you agree to the terms stated in this policy.
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>4. Return Conditions</CardTitle>
+              <CardTitle>2. Refund Policy</CardTitle>
+            </CardHeader>
+            <CardContent className="prose prose-sm max-w-none space-y-4">
+              <ul className="list-disc list-inside space-y-2">
+                <li>Refund requests must be raised within 24 hours of placing the order.</li>
+                <li>Refund eligibility is subject to verification and approval by Mizuki.</li>
+                <li>The decision of the company regarding refunds shall be final and binding.</li>
+              </ul>
+              
+              <div>
+                <h4 className="font-semibold mb-2">Refund Conditions</h4>
+                <p>Refunds may be considered under the following circumstances:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Order placed but not yet processed or dispatched</li>
+                  <li>Duplicate payment or transaction errors</li>
+                  <li>Other exceptional cases as determined by Mizuki</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">Non-Refundable Cases</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Requests made after 24 hours of placing the order</li>
+                  <li>Customized clothing orders once production has begun</li>
+                  <li>Minor variations in color, design, or fabric</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>3. Cancellation Policy</CardTitle>
+            </CardHeader>
+            <CardContent className="prose prose-sm max-w-none space-y-4">
+              <p>Cancellation of orders is allowed only under the following conditions:</p>
+              
+              <div>
+                <h4 className="font-semibold mb-2">a. Unavailability of Fabric or Design</h4>
+                <p>
+                  Orders may be cancelled only if the selected fabric or design is not available at any cost or from any source to Mizuki.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold mb-2">b. Product Issue After Delivery</h4>
+                <p>If the delivered product does not match the confirmed order details:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Mizuki will arrange a replacement.</li>
+                  <li>If the issue persists even after the second delivery attempt, the order will be eligible for cancellation.</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>4. Replacement Policy</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
-              <p className="mb-4">Products must be returned in:</p>
               <ul className="list-disc list-inside space-y-2">
-                <li>Original packaging (if possible)</li>
-                <li>Unused and unworn condition</li>
-                <li>With all tags and labels attached</li>
-                <li>With proof of purchase (order number)</li>
+                <li>Replacement requests must be raised within specified days of delivery.</li>
+                <li>Products must be unused, unwashed, and in original condition with tags intact.</li>
+                <li>Customized products are eligible for replacement only in case of manufacturing defects or incorrect fulfillment.</li>
               </ul>
             </CardContent>
           </Card>
@@ -89,52 +104,39 @@ export default function RefundPolicy() {
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <ul className="list-disc list-inside space-y-2">
-                <li>Refunds will be processed within 7-14 business days after we receive and inspect the returned product</li>
-                <li>Refunds will be issued to the original payment method</li>
-                <li>Shipping costs are non-refundable (except for our errors)</li>
-                <li>Return shipping costs are the customer's responsibility</li>
+                <li>Approved refunds will be processed within a reasonable timeframe.</li>
+                <li>Refunds will be credited via the original payment method unless otherwise agreed.</li>
+                <li>Processing time may vary depending on the payment provider.</li>
               </ul>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>6. Non-Refundable Items</CardTitle>
+              <CardTitle>6. Important Notes</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
-              <p>The following are not eligible for returns or refunds:</p>
-              <ul className="list-disc list-inside space-y-2 mt-2">
-                <li>Custom orders (made-to-measure items)</li>
-                <li>Items damaged by customer misuse</li>
-                <li>Items returned after 7 days of delivery</li>
-                <li>Items without unboxing video</li>
-                <li>Items that have been worn, washed, or altered</li>
+              <ul className="list-disc list-inside space-y-2">
+                <li>Mizuki reserves the right to inspect returned or disputed products before approving refunds or cancellations.</li>
+                <li>Shipping charges (if any) may be non-refundable unless the issue is caused by Mizuki.</li>
+                <li>This policy is subject to change without prior notice.</li>
               </ul>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>7. Color Variations</CardTitle>
+              <CardTitle>7. Contact Information</CardTitle>
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
-              <p>
-                Minor color variations may occur due to photography, lighting, or device display settings. 
-                These variations do not constitute a defect and are not grounds for return.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>8. Contact Us</CardTitle>
-            </CardHeader>
-            <CardContent className="prose prose-sm max-w-none">
-              <p>
-                For return requests or questions about this policy, contact us at{' '}
-                <a href="mailto:enquiry@asfffdf.com" className="text-primary hover:underline">
-                  enquiry@asfffdf.com
-                </a>
+              <p className="mb-4">For any questions or concerns regarding this Refund & Cancellation Policy, please contact:</p>
+              <div className="text-sm space-y-1">
+                <p><strong>Mizuki (A Unit of Aadharsh International)</strong></p>
+                <p>Email: <a href="mailto:mizukibeautifulmoon123@gmail.com" className="text-primary hover:underline">mizukibeautifulmoon123@gmail.com</a></p>
+                <p>WhatsApp/Call: <a href="tel:+919942322743" className="text-primary hover:underline">+91 9942322743</a></p>
+              </div>
+              <p className="mt-4 text-sm italic">
+                By placing an order, you acknowledge that you have read, understood, and agreed to this Refund & Cancellation Policy.
               </p>
             </CardContent>
           </Card>

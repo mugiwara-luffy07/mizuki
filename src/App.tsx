@@ -23,6 +23,7 @@ import CustomOrderDetails from "./pages/CustomOrderDetails";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import ProductCheckout from "./pages/ProductCheckout";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import ProductOrderSuccess from "./pages/ProductOrderSuccess";
 import MyOrders from "./pages/MyOrders";
 import MyOrderDetails from "./pages/MyOrderDetails";
@@ -31,6 +32,7 @@ import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
 import RefundPolicy from "./pages/RefundPolicy";
+import DisclaimerPolicy from "./pages/DisclaimerPolicy";
 import Wishlist from "./pages/Wishlist";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
@@ -145,6 +147,7 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route path="payment-success" element={<PaymentSuccess />} />
             <Route path="product-order-success" element={<ProductOrderSuccess />} />
             <Route 
               path="my-orders" 
@@ -178,6 +181,7 @@ const App = () => (
             <Route path="privacy-policy" element={<PrivacyPolicy />} />
             <Route path="terms-conditions" element={<TermsConditions />} />
             <Route path="refund-policy" element={<RefundPolicy />} />
+            <Route path="disclaimer-policy" element={<DisclaimerPolicy />} />
           </Route>
 
           {/* 404 */}

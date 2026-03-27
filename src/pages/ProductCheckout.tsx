@@ -1,18 +1,39 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Upload, Copy, Check, Loader2, Eye, X } from 'lucide-react';
+import { Copy, Check, Loader2 } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import { useTenantStore } from '@/store/tenantStore';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/supabase-client';
-import { getImageUrl } from '@/lib/imageUtils';
+
+const PENDING_ORDER_KEY_PREFIX = 'cashfree_pending_order_';
+
+interface PendingOrderDraft {
+  order_number: string;
+  user_id: string;
+  customer_email: string;
+  customer_name: string;
+  customer_phone: string;
+  shipping_address: {
+    fullName: string;
+    phone: string;
+    address: string;
+    city: string;
+    state: string;
+    pincode: string;
+  };
+  items: any[];
+  subtotal: number;
+  shipping_cost: number;
+  total: number;
+}
 
 export default function ProductCheckout() {
   const { tenant } = useParams<{ tenant: string }>();
   const navigate = useNavigate();
-  const { items, getTotal, clearCart } = useCartStore();
+  const { items, getTotal } = useCartStore();
   const { user } = useAuthStore();
   const { config } = useTenantStore();
 
@@ -28,11 +49,7 @@ export default function ProductCheckout() {
 
   // Payment section state
   const [currentStep, setCurrentStep] = useState<'shipping' | 'payment'>('shipping');
-  const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
-  const [paymentProofPreview, setPaymentProofPreview] = useState<string>('');
-  const [paymentProofUrl, setPaymentProofUrl] = useState<string>('');
-  const [uploading, setUploading] = useState(false);
-  const [placing, setPlacing] = useState(false);
+  const [paying, setPaying] = useState(false);
   const [copiedUPI, setCopiedUPI] = useState(false);
 
   const subtotal = getTotal();
@@ -84,141 +101,82 @@ export default function ProductCheckout() {
     }
   };
 
-  // Handle file selection for payment proof
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size must be less than 5MB');
-      return;
-    }
-
-    setPaymentProofFile(file);
-
-    // Create preview
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setPaymentProofPreview(event.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+  const getCashfreeMode = () => {
+    return import.meta.env.VITE_CASHFREE_ENV === 'production' ? 'production' : 'sandbox';
   };
 
-  // Upload payment proof to Supabase
-  const uploadPaymentProof = async () => {
-    if (!paymentProofFile || !user) return;
+  const handlePayNow = async () => {
+    if (!user || !tenant) {
+      toast.error('Please log in to continue');
+      return;
+    }
 
-    setUploading(true);
+    if (!validateForm()) {
+      return;
+    }
+
+    if (items.length === 0) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
+    setPaying(true);
     try {
-      const fileExt = paymentProofFile.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-      // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('payment-proofs')
-        .upload(fileName, paymentProofFile);
-
-      if (error) throw error;
-
-      // Store the reference for later signed URL generation
-      setPaymentProofUrl(`supabase://payment-proofs/${fileName}`);
-      toast.success('Payment proof uploaded successfully!');
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast.error('Failed to upload payment proof');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  // Clear file selection
-  const handleClearFile = () => {
-    setPaymentProofFile(null);
-    setPaymentProofPreview('');
-    setPaymentProofUrl('');
-  };
-
-  // Place order
-  const handlePlaceOrder = async () => {
-    if (!user || !paymentProofUrl) {
-      toast.error('Please upload payment proof');
-      return;
-    }
-
-    setPlacing(true);
-    try {
-      // Generate order number
-      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`;
-      
-      // Insert order into database
-      const { data, error } = await supabase
-        .from('ecommerce_orders')
-        .insert([
-          {
-            order_number: orderNumber,
-            user_id: user.id,
-            customer_email: user.email,
-            customer_name: formData.fullName,
-            customer_phone: formData.phone,
-            shipping_address: formData,
-            items,
-            subtotal,
-            shipping_cost: shipping,
-            total,
-            status: 'pending',
-            payment_status: 'pending',
-            payment_method: 'UPI_QR',
-            payment_proof_url: paymentProofUrl,
-          },
-        ])
-        .select();
-
-      if (error) throw error;
-
-      // Send order placed email
-      try {
-        console.log('📧 Sending ORDER_PLACED email...', {
-          order_id: data[0].id,
-          email: user.email,
-          event_type: 'ORDER_PLACED',
-        });
-        
-        const response = await supabase.functions.invoke('send-order-email', {
-          body: {
-            order_id: data[0].id,
-            email: user.email,
-            event_type: 'ORDER_PLACED',
-          },
-        });
-        
-        console.log('✅ Email response:', response);
-      } catch (emailError) {
-        console.error('❌ Email send error:', emailError);
-        // Don't fail order if email fails
-      }
-
-      // Clear cart and navigate to success page
-      clearCart();
-      toast.success('Order placed successfully!');
-      navigate(`/${tenant}/product-order-success`, {
-        state: { 
-          orderId: data[0].id, 
-          totalAmount: total,
-          shippingAddress: formData,
+      const { data, error } = await supabase.functions.invoke('create-payment-order', {
+        body: {
+          amount: total,
+          customer_name: formData.fullName,
+          customer_email: user.email,
+          customer_phone: formData.phone,
+          tenant,
         },
       });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to create payment order');
+      }
+
+      if (!data?.order_id || !data?.payment_session_id) {
+        throw new Error('Invalid response from payment gateway');
+      }
+
+      // Save order draft locally and finalize only after payment verification.
+      const pendingOrder: PendingOrderDraft = {
+        order_number: data.order_id,
+        user_id: user.id,
+        customer_email: user.email || '',
+        customer_name: formData.fullName,
+        customer_phone: formData.phone,
+        shipping_address: formData,
+        items,
+        subtotal,
+        shipping_cost: shipping,
+        total,
+      };
+
+      sessionStorage.setItem(
+        `${PENDING_ORDER_KEY_PREFIX}${data.order_id}`,
+        JSON.stringify(pendingOrder)
+      );
+
+      if (!window.Cashfree) {
+        throw new Error('Cashfree SDK is not loaded');
+      }
+
+      const cashfree = window.Cashfree({ mode: getCashfreeMode() });
+      await cashfree.checkout({
+        paymentSessionId: data.payment_session_id,
+        redirectTarget: '_self',
+      });
+
+      // Cashfree handles redirect to the return URL.
+      return;
+
     } catch (error) {
       console.error('Order error:', error);
-      toast.error('Failed to place order. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to start payment');
     } finally {
-      setPlacing(false);
+      setPaying(false);
     }
   };
 
@@ -351,29 +309,12 @@ export default function ProductCheckout() {
                 </Button>
               </div>
 
-              <h2 className="text-xl font-semibold">Payment via UPI</h2>
+              <h2 className="text-xl font-semibold">Payment via Cashfree</h2>
 
-              {/* QR Code */}
-              {config?.payment?.upiQrImage && (
-                <div className="flex flex-col items-center gap-4 p-4 bg-white rounded-lg border border-border">
-                  <p className="text-sm font-medium">Google Pay UPI QR</p>
-                  <div className="w-40 h-40 bg-muted rounded-lg flex items-center justify-center">
-                    <img
-                      src={config.payment.upiQrImage}
-                      alt="UPI QR Code"
-                      className="w-40 h-40 object-contain"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground text-center">
-                    Scan this QR using Google Pay and complete the payment
-                  </p>
-                </div>
-              )}
-
-              {/* UPI Details */}
+              {/* Optional fallback UPI details */}
               <div className="space-y-3 border-t border-border pt-4">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">UPI ID</p>
+                  <p className="text-xs text-muted-foreground mb-1">UPI ID (Optional Fallback)</p>
                   <div className="flex items-center gap-2 bg-muted p-2 rounded">
                     <code className="text-sm flex-1">{config?.payment?.upiId}</code>
                     <Button
@@ -392,103 +333,30 @@ export default function ProductCheckout() {
                 </div>
 
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Amount to Pay</p>
+                  <p className="text-xs text-muted-foreground mb-1">Amount</p>
                   <p className="text-2xl font-semibold">₹{total.toLocaleString()}</p>
                 </div>
               </div>
 
-              {/* Screenshot Upload */}
-              <div className="border-t border-border pt-4 space-y-4">
-                <p className="text-sm font-medium">Upload Payment Screenshot</p>
-
-                {!paymentProofFile ? (
-                  <div className="border-2 border-dashed border-border rounded-lg p-6">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      id="payment-proof"
-                    />
-                    <label
-                      htmlFor="payment-proof"
-                      className="cursor-pointer flex flex-col items-center gap-2"
-                    >
-                      <Upload className="w-8 h-8 text-muted-foreground" />
-                      <span className="text-sm font-medium">Click to select image</span>
-                      <span className="text-xs text-muted-foreground">
-                        PNG, JPG up to 5MB
-                      </span>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between bg-muted p-3 rounded-lg">
-                      <span className="text-sm truncate">{paymentProofFile.name}</span>
-                      <button
-                        onClick={handleClearFile}
-                        className="text-destructive hover:text-destructive/80"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Image Preview */}
-                    {paymentProofPreview && (
-                      <div className="mt-4">
-                        <p className="text-xs text-muted-foreground mb-2">Preview</p>
-                        <div className="border border-border rounded-lg overflow-hidden max-h-64 flex items-center justify-center bg-muted">
-                          <img
-                            src={paymentProofPreview}
-                            alt="Payment proof preview"
-                            className="max-w-full max-h-64 object-contain"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {!paymentProofUrl && (
-                      <Button
-                        onClick={uploadPaymentProof}
-                        disabled={uploading}
-                        className="w-full"
-                      >
-                        {uploading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Uploading...
-                          </>
-                        ) : (
-                          'Upload Screenshot'
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                )}
-
-                {paymentProofUrl && (
-                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <Check className="w-5 h-5 text-green-600" />
-                    <span className="text-sm text-green-700">
-                      Payment proof uploaded successfully
-                    </span>
-                  </div>
-                )}
+              <div className="border-t border-border pt-4">
+                <p className="text-sm text-muted-foreground mb-4">
+                  Click the button below to open Cashfree Hosted Checkout. You will be redirected to a secure payment page.
+                </p>
               </div>
 
               <Button
-                onClick={handlePlaceOrder}
-                disabled={!paymentProofUrl || placing}
+                onClick={handlePayNow}
+                disabled={paying}
                 className="w-full"
                 size="lg"
               >
-                {placing ? (
+                {paying ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Placing Order...
+                    Redirecting to Cashfree...
                   </>
                 ) : (
-                  'Place Order'
+                  'Pay Now'
                 )}
               </Button>
             </div>

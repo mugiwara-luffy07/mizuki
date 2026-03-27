@@ -58,9 +58,14 @@ export function Navbar() {
               alt={`${config.brandName} logo`}
               className="h-12 w-12 rounded-full object-cover"
             />
-            <span className="text-xl md:text-2xl font-semibold tracking-tight">
-              {config.brandName}
-            </span>
+            <div className="flex flex-col">
+              <span className="text-xl md:text-2xl font-semibold tracking-tight">
+                {config.brandName}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Unit Of Aadharsh International
+              </span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
