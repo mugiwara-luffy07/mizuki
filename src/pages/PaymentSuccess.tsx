@@ -11,6 +11,7 @@ const PENDING_ORDER_KEY_PREFIX = 'cashfree_pending_order_';
 interface PendingOrderDraft {
   order_number: string;
   user_id: string;
+  tenant: string;
   customer_email: string;
   customer_name: string;
   customer_phone: string;
@@ -46,16 +47,33 @@ export default function PaymentSuccess() {
     hasProcessedRef.current = true;
 
     const finalizeOrder = async () => {
-      const cashfreeOrderId = searchParams.get('order_id');
+      const cashfreeOrderId = searchParams.get('order_id')?.trim();
+
+      console.log('[PaymentSuccess] Starting order finalization', {
+        cashfreeOrderId,
+        tenant,
+        sessionStorageKeys: Object.keys(sessionStorage).filter(k => k.includes('cashfree')),
+      });
 
       if (!tenant || !cashfreeOrderId) {
         setStatus('failed');
         setMessage('Missing tenant or order id in payment callback URL.');
+        console.error('[PaymentSuccess] Missing tenant or cashfreeOrderId');
         return;
       }
 
       try {
-        const draftRaw = sessionStorage.getItem(`${PENDING_ORDER_KEY_PREFIX}${cashfreeOrderId}`);
+        const storageKey = `${PENDING_ORDER_KEY_PREFIX}${cashfreeOrderId}`;
+        const sessionDraft = sessionStorage.getItem(storageKey);
+        const localDraft = localStorage.getItem(storageKey);
+        const draftRaw = sessionDraft || localDraft;
+
+        console.log('[PaymentSuccess] Draft lookup:', {
+          sessionDraftExists: !!sessionDraft,
+          localDraftExists: !!localDraft,
+          draftExists: !!draftRaw,
+        });
+        
         if (!draftRaw) {
           throw new Error('Could not find pending order details. Please try checkout again.');
         }
@@ -63,28 +81,37 @@ export default function PaymentSuccess() {
         const draft = JSON.parse(draftRaw) as PendingOrderDraft;
 
         // Step 1: Verify payment status with Cashfree via Edge Function.
+        console.log('[PaymentSuccess] Calling verify-payment edge function', { cashfreeOrderId });
         const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-payment', {
           body: { order_id: cashfreeOrderId },
         });
 
+        console.log('[PaymentSuccess] verify-payment response', { verifyData, verifyError });
+
         if (verifyError) {
-          throw new Error(verifyError.message || 'Payment verification failed');
+          throw new Error(`Payment verification failed: ${verifyError.message}`);
         }
 
         if (!verifyData?.success) {
           setStatus('failed');
-          setMessage(`Payment not completed yet. Current status: ${verifyData?.order_status || 'UNKNOWN'}`);
+          const statusMsg = `Payment not completed yet. Current status: ${verifyData?.order_status || 'UNKNOWN'}`;
+          setMessage(statusMsg);
+          console.error('[PaymentSuccess] Payment verification failed', verifyData);
           return;
         }
 
+        console.log('[PaymentSuccess] Payment verified successfully');
         setMessage('Payment verified. Creating your order...');
 
         // Step 2: Avoid duplicate inserts on page refresh.
+        console.log('[PaymentSuccess] Checking for existing order');
         const { data: existingOrder, error: existingError } = await supabase
           .from('ecommerce_orders')
           .select('id')
           .eq('order_number', cashfreeOrderId)
           .maybeSingle();
+
+        console.log('[PaymentSuccess] Existing order check', { existingOrder, existingError });
 
         if (existingError) {
           throw existingError;
@@ -93,37 +120,68 @@ export default function PaymentSuccess() {
         let orderId = existingOrder?.id;
 
         if (!orderId) {
-          const { data: insertedOrder, error: insertError } = await supabase
+          console.log('[PaymentSuccess] Inserting new order', { tenant: draft.tenant });
+          const payloadBase = {
+            order_number: cashfreeOrderId,
+            user_id: draft.user_id,
+            customer_email: draft.customer_email,
+            customer_name: draft.customer_name,
+            customer_phone: draft.customer_phone,
+            shipping_address: draft.shipping_address,
+            items: draft.items,
+            subtotal: draft.subtotal,
+            shipping_cost: draft.shipping_cost,
+            total: draft.total,
+            status: 'pending',
+            payment_status: 'paid',
+            payment_method: 'CASHFREE',
+          };
+
+          let { data: insertedOrder, error: insertError } = await supabase
             .from('ecommerce_orders')
-            .insert([
-              {
-                order_number: cashfreeOrderId,
-                user_id: draft.user_id,
-                customer_email: draft.customer_email,
-                customer_name: draft.customer_name,
-                customer_phone: draft.customer_phone,
-                shipping_address: draft.shipping_address,
-                items: draft.items,
-                subtotal: draft.subtotal,
-                shipping_cost: draft.shipping_cost,
-                total: draft.total,
-                status: 'pending',
-                payment_status: 'paid',
-                payment_method: 'CASHFREE',
-              },
-            ])
+            .insert([payloadBase])
             .select('id')
             .single();
 
+          console.log('[PaymentSuccess] Order insert response', { insertedOrder, insertError });
+
+          const tenantRequired =
+            !!insertError?.message &&
+            (insertError.message.toLowerCase().includes("tenant") &&
+              (insertError.message.toLowerCase().includes("null") ||
+                insertError.message.toLowerCase().includes("required")));
+
+          if (insertError && tenantRequired) {
+            console.warn('[PaymentSuccess] tenant required by schema, retrying with tenant');
+
+            const retryResult = await supabase
+              .from('ecommerce_orders')
+              .insert([{ ...payloadBase, tenant: draft.tenant }])
+              .select('id')
+              .single();
+
+            insertedOrder = retryResult.data;
+            insertError = retryResult.error;
+
+            console.log('[PaymentSuccess] Retry insert response', {
+              insertedOrder,
+              insertError,
+            });
+          }
+
           if (insertError) {
-            throw insertError;
+            throw new Error(`Failed to create order: ${insertError.message}`);
           }
 
           orderId = insertedOrder.id;
+          console.log('[PaymentSuccess] Order created successfully', { orderId });
+        } else {
+          console.log('[PaymentSuccess] Order already exists');
         }
 
         clearCart();
-        sessionStorage.removeItem(`${PENDING_ORDER_KEY_PREFIX}${cashfreeOrderId}`);
+        sessionStorage.removeItem(storageKey);
+        localStorage.removeItem(storageKey);
 
         setStatus('success');
         setMessage('Payment successful. Redirecting to order success page...');
@@ -139,6 +197,7 @@ export default function PaymentSuccess() {
         });
       } catch (error) {
         const text = error instanceof Error ? error.message : 'Unexpected error while finalizing order';
+        console.error('[PaymentSuccess] Error:', text);
         setStatus('failed');
         setMessage(text);
       }

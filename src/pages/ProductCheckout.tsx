@@ -13,6 +13,7 @@ const PENDING_ORDER_KEY_PREFIX = 'cashfree_pending_order_';
 interface PendingOrderDraft {
   order_number: string;
   user_id: string;
+  tenant: string;
   customer_email: string;
   customer_name: string;
   customer_phone: string;
@@ -144,6 +145,7 @@ export default function ProductCheckout() {
       const pendingOrder: PendingOrderDraft = {
         order_number: data.order_id,
         user_id: user.id,
+        tenant: tenant!,
         customer_email: user.email || '',
         customer_name: formData.fullName,
         customer_phone: formData.phone,
@@ -155,6 +157,12 @@ export default function ProductCheckout() {
       };
 
       sessionStorage.setItem(
+        `${PENDING_ORDER_KEY_PREFIX}${data.order_id}`,
+        JSON.stringify(pendingOrder)
+      );
+
+      // Fallback persistence for gateway redirects that may lose sessionStorage state.
+      localStorage.setItem(
         `${PENDING_ORDER_KEY_PREFIX}${data.order_id}`,
         JSON.stringify(pendingOrder)
       );
