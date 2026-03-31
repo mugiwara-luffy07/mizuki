@@ -33,6 +33,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
 import RefundPolicy from "./pages/RefundPolicy";
 import DisclaimerPolicy from "./pages/DisclaimerPolicy";
+import DeliveryPolicy from "./pages/DeliveryPolicy";
 import Wishlist from "./pages/Wishlist";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
@@ -181,6 +182,7 @@ const App = () => (
             <Route path="privacy-policy" element={<PrivacyPolicy />} />
             <Route path="terms-conditions" element={<TermsConditions />} />
             <Route path="refund-policy" element={<RefundPolicy />} />
+            <Route path="delivery-policy" element={<DeliveryPolicy />} />
             <Route path="disclaimer-policy" element={<DisclaimerPolicy />} />
           </Route>
 

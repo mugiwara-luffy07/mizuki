@@ -95,6 +95,14 @@ export function Footer() {
               </li>
               <li>
                 <Link
+                  to={`/${tenant}/delivery-policy`}
+                  className="text-sm opacity-80 hover:opacity-100 transition-opacity"
+                >
+                  Delivery Policy
+                </Link>
+              </li>
+              <li>
+                <Link
                   to={`/${tenant}/disclaimer-policy`}
                   className="text-sm opacity-80 hover:opacity-100 transition-opacity"
                 >
